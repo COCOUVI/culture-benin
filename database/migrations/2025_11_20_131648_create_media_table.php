@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('medias', function (Blueprint $table) {
             $table->id();
-            $table->string('chemin');
+            $table->string('chemin')->nullable();
             $table->text('description');
             $table->foreignId('id_contenu')->constrained('contenus');
             $table->foreignId('id_type_media')->constrained('type_medias');

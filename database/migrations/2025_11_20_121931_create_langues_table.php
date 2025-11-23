@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nom_langue')->unique();
             $table->string('code_langue')->unique();
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('regions', function (Blueprint $table) {
             $table->id();
             $table->string('nom_region')->unique();
-            $table->string('description_region');
+            $table->string('description_region')->nullable();
             $table->integer('population');
             $table->string('localisation');
             $table->double('superficie');
