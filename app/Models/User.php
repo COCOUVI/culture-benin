@@ -107,7 +107,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
 	public function contenus()
 	{
-		return $this->hasMany(Contenu::class, 'id_moderateur');
+		return $this->hasMany(Contenu::class, 'id_auteur');
 	}
     public function aPaye(Contenu $contenu): bool
     {

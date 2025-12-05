@@ -10,15 +10,15 @@
                 <span class="brand-tagline">Patrimoine & Traditions</span>
             </div>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Basculer la navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('accueil') ? 'active' : '' }}" 
-                       href="{{ route('accueil') }}" 
+                    <a class="nav-link {{ request()->routeIs('accueil') ? 'active' : '' }}"
+                       href="{{ route('accueil') }}"
                        aria-current="{{ request()->routeIs('accueil') ? 'page' : 'false' }}">
                        Accueil
                     </a>
@@ -33,7 +33,7 @@
                     <a class="nav-link" href="#traditions">Traditions</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#regions">Régions</a>
+                    <a class="nav-link" href="#medias">Medias</a>
                 </li>
             </ul>
             <div class="d-flex align-items-center flex-wrap gap-2">
@@ -109,11 +109,11 @@
     .navbar-logo {
         height: 75px;  /* Encore plus grand sur grands écrans */
     }
-    
+
     .brand-name {
         font-size: 1. 5rem;
     }
-    
+
     .brand-tagline {
         font-size: 0.8rem;
     }
@@ -124,11 +124,11 @@
     .navbar-logo {
         height: 65px;
     }
-    
+
     .brand-name {
         font-size: 1.3rem;
     }
-    
+
     .brand-tagline {
         font-size: 0. 7rem;
     }
@@ -139,15 +139,15 @@
     .navbar-brand {
         gap: 0.85rem;
     }
-    
+
     .navbar-logo {
         height: 58px;
     }
-    
+
     .brand-name {
         font-size: 1.2rem;
     }
-    
+
     .brand-tagline {
         font-size: 0. 65rem;
     }
@@ -158,15 +158,15 @@
     .navbar-brand {
         gap: 0. 75rem;
     }
-    
+
     .navbar-logo {
         height: 52px;
     }
-    
+
     .brand-name {
         font-size: 1. 1rem;
     }
-    
+
     .brand-tagline {
         display: none;
     }
@@ -177,7 +177,7 @@
     .navbar-logo {
         height: 48px;
     }
-    
+
     .brand-name {
         font-size: 1rem;
     }

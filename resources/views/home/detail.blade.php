@@ -117,25 +117,6 @@
                             {!! nl2br(e($contenu->texte)) !!}
                         </div>
 
-                        <!-- Media Gallery -->
-                        @if($contenu->media->count() > 1)
-                            <section class="article-gallery">
-                                <h3 class="section-heading">
-                                    <i class="fas fa-images me-2"></i>
-                                    Galerie photos
-                                </h3>
-                                <div class="row g-3">
-                                    @foreach($contenu->media->skip(1) as $media)
-                                        <div class="col-md-6">
-                                            <div class="gallery-item">
-                                                <img src="{{ asset('storage/' . $media->chemin) }}" alt="Image {{ $loop->iteration }}">
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </section>
-                        @endif
-
                         <!-- Tags -->
                         @if($contenu->tags)
                             <section class="article-tags">
@@ -225,139 +206,272 @@
                             <div class="comments-header">
                                 <h4 class="section-heading">
                                     <i class="fas fa-comments me-2"></i>
-                                    Commentaires (3)
+                                    Commentaires ({{ $nombreCommentaires }})
+                                    @if($nombreCommentaires > 0)
+                                        <span class="rating-badge">
+                    <i class="fas fa-star"></i>
+                    {{ number_format($noteMoyenne, 1) }}/5
+                </span>
+                                    @endif
                                 </h4>
                             </div>
 
-                            <!-- Add Comment Form (User Connected) -->
+                            {{-- Messages de succès --}}
+                            @if(session('success'))
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            {{-- Messages d'erreur --}}
+                            @if($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <ul class="mb-0">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            {{-- Formulaire d'ajout de commentaire (utilisateur connecté) --}}
                             @auth
-                                <div class="comment-form-wrapper">
-                                    <form class="comment-form">
-                                        <div class="comment-form__avatar">
-                                            @if(auth()->user()->photo)
-                                                <img src="{{ asset('storage/' . auth()->user()->photo) }}" alt="{{ auth()->user()->nom }}">
-                                            @else
-                                                <div class="comment-form__avatar-placeholder">
-                                                    <i class="fas fa-user"></i>
+                                @if(! $userComment)
+                                    {{-- L'utilisateur n'a pas encore commenté --}}
+                                    <div class="comment-form-wrapper">
+                                        <form action="{{ route('comment.store', $contenu) }}" method="POST" class="comment-form" id="commentForm">
+                                            @csrf
+                                            <div class="comment-form__avatar">
+                                                @if(auth()->user()->photo)
+                                                    <img src="{{ asset('storage/' . auth()->user()->photo) }}" alt="{{ auth()->user()->nom }}">
+                                                @else
+                                                    <div class="comment-form__avatar-placeholder">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="comment-form__input-wrapper">
+                                                {{-- Système d'étoiles --}}
+                                                <div class="rating-input">
+                                                    <label class="rating-label">
+                                                        Votre note <span class="text-danger">*</span>
+                                                        <span class="rating-selected" id="ratingText"></span>
+                                                    </label>
+                                                    <div class="star-rating" id="starRating">
+                                                        <input type="radio" id="star5" name="note" value="5" required>
+                                                        <label for="star5" title="Excellent" data-value="5">
+                                                            <i class="fas fa-star"></i>
+                                                        </label>
+
+                                                        <input type="radio" id="star4" name="note" value="4">
+                                                        <label for="star4" title="Très bien" data-value="4">
+                                                            <i class="fas fa-star"></i>
+                                                        </label>
+
+                                                        <input type="radio" id="star3" name="note" value="3">
+                                                        <label for="star3" title="Bien" data-value="3">
+                                                            <i class="fas fa-star"></i>
+                                                        </label>
+
+                                                        <input type="radio" id="star2" name="note" value="2">
+                                                        <label for="star2" title="Moyen" data-value="2">
+                                                            <i class="fas fa-star"></i>
+                                                        </label>
+
+                                                        <input type="radio" id="star1" name="note" value="1">
+                                                        <label for="star1" title="Médiocre" data-value="1">
+                                                            <i class="fas fa-star"></i>
+                                                        </label>
+                                                    </div>
                                                 </div>
-                                            @endif
-                                        </div>
-                                        <div class="comment-form__input-wrapper">
-                                            <textarea
-                                                class="comment-form__input"
-                                                rows="3"
-                                                placeholder="Ajouter un commentaire..."
-                                                required
-                                            ></textarea>
-                                            <div class="comment-form__actions">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm">
-                                                    Annuler
-                                                </button>
-                                                <button type="submit" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-paper-plane me-2"></i>
-                                                    Publier
-                                                </button>
+
+                                                {{-- Zone de texte --}}
+                                                <textarea
+                                                    name="commentaire"
+                                                    class="comment-form__input"
+                                                    rows="4"
+                                                    placeholder="Partagez votre avis sur ce contenu culturel..."
+                                                    required
+                                                    minlength="3"
+                                                    maxlength="1000"
+                                                >{{ old('commentaire') }}</textarea>
+
+                                                <div class="comment-form__actions">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-paper-plane me-2"></i>
+                                                        Publier mon avis
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @else
+                                    {{-- L'utilisateur a déjà commenté --}}
+                                    <div class="user-existing-comment">
+                                        <div class="alert alert-info d-flex align-items-start">
+                                            <i class="fas fa-info-circle me-3 mt-1"></i>
+                                            <div>
+                                                <strong>Vous avez déjà commenté ce contenu.</strong>
+                                                <p class="mb-0 mt-1">Vous pouvez modifier ou supprimer votre commentaire ci-dessous.</p>
                                             </div>
                                         </div>
-                                    </form>
-                                </div>
+                                    </div>
+                                @endif
                             @else
+                                {{-- Utilisateur non connecté --}}
                                 <div class="comment-login-prompt">
                                     <i class="fas fa-lock me-2"></i>
-                                    <span>Vous devez être <a href="{{ route('login') }}">connecté</a> pour commenter</span>
+                                    <span>
+                Vous devez être <a href="{{ route('login') }}">connecté</a> pour commenter et noter ce contenu culturel.
+            </span>
                                 </div>
                             @endauth
 
-                            <!-- Comments List (Mock Data) -->
+                            {{-- Liste des commentaires --}}
                             <div class="comments-list">
-                                <!-- Comment 1 -->
-                                <div class="comment-item">
-                                    <div class="comment-item__avatar">
-                                        <img src="https://ui-avatars.com/api/? name=Marie+Kossou&background=008751&color=fff" alt="Marie Kossou">
-                                    </div>
-                                    <div class="comment-item__content">
-                                        <div class="comment-item__header">
-                                            <span class="comment-item__author">Marie Kossou</span>
-                                            <span class="comment-item__date">
-                                                <i class="far fa-clock me-1"></i>
-                                                Il y a 2 heures
-                                            </span>
+                                @forelse($contenu->commentaires as $commentaire)
+                                    <div class="comment-item {{ $commentaire->id_user === auth()->id() ? 'comment-item--own' : '' }}">
+                                        <div class="comment-item__avatar">
+                                            @if($commentaire->user->photo)
+                                                <img src="{{ asset('storage/' . $commentaire->user->photo) }}" alt="{{ $commentaire->user->nom }}">
+                                            @else
+                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($commentaire->user->prenom .  ' ' . $commentaire->user->nom) }}&background=008751&color=fff&size=128"
+                                                     alt="{{ $commentaire->user->nom }}">
+                                            @endif
                                         </div>
-                                        <p class="comment-item__text">
-                                            Très bel article sur notre culture !  C'est important de préserver ces traditions pour les générations futures.  Merci pour ce partage enrichissant.
-                                        </p>
-                                        <div class="comment-item__actions">
-                                            <button class="comment-action-btn">
-                                                <i class="far fa-thumbs-up me-1"></i>
-                                                Aimer (12)
-                                            </button>
-                                            <button class="comment-action-btn">
-                                                <i class="fas fa-reply me-1"></i>
-                                                Répondre
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                        <div class="comment-item__content">
+                                            <div class="comment-item__header">
+                                                <div class="comment-item__author-block">
+                            <span class="comment-item__author">
+                                {{ $commentaire->user->prenom }} {{ $commentaire->user->nom }}
+                                @if($commentaire->id_user === auth()->id())
+                                    <span class="badge bg-success ms-2">Vous</span>
+                                @endif
+                            </span>
+                                                    {{-- Étoiles --}}
+                                                    <div class="comment-rating">
+                                                        @for($i = 1; $i <= 5; $i++)
+                                                            <i class="fas fa-star {{ $i <= $commentaire->note ? 'star-filled' : 'star-empty' }}"></i>
+                                                        @endfor
+                                                        <span class="rating-text">({{ $commentaire->note }}/5)</span>
+                                                    </div>
+                                                </div>
+                                                <span class="comment-item__date">
+                                                    <i class="far fa-clock me-1"></i>
+                                                    @if($commentaire->updated_at && $commentaire->updated_at != $commentaire->created_at)
+                                                        Modifié {{ $commentaire->updated_at->locale('fr')->diffForHumans() }}
+                                                    @else
+                                                        {{ $commentaire->created_at->locale('fr')->diffForHumans() }}
+                                                    @endif
+                                                </span>
+                                            </div>
 
-                                <!-- Comment 2 -->
-                                <div class="comment-item">
-                                    <div class="comment-item__avatar">
-                                        <img src="https://ui-avatars.com/api/?name=Jean+Dossou&background=FCD116&color=000" alt="Jean Dossou">
-                                    </div>
-                                    <div class="comment-item__content">
-                                        <div class="comment-item__header">
-                                            <span class="comment-item__author">Jean Dossou</span>
-                                            <span class="comment-item__date">
-                                                <i class="far fa-clock me-1"></i>
-                                                Il y a 5 heures
-                                            </span>
-                                        </div>
-                                        <p class="comment-item__text">
-                                            Excellent travail de documentation !  J'ai appris beaucoup de choses sur notre patrimoine culturel.
-                                        </p>
-                                        <div class="comment-item__actions">
-                                            <button class="comment-action-btn">
-                                                <i class="far fa-thumbs-up me-1"></i>
-                                                Aimer (8)
-                                            </button>
-                                            <button class="comment-action-btn">
-                                                <i class="fas fa-reply me-1"></i>
-                                                Répondre
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                            <p class="comment-item__text">
+                                                {{ $commentaire->commentaire }}
+                                            </p>
 
-                                <!-- Comment 3 -->
-                                <div class="comment-item">
-                                    <div class="comment-item__avatar">
-                                        <img src="https://ui-avatars.com/api/?name=Awa+Soglo&background=E8112D&color=fff" alt="Awa Soglo">
-                                    </div>
-                                    <div class="comment-item__content">
-                                        <div class="comment-item__header">
-                                            <span class="comment-item__author">Awa Soglo</span>
-                                            <span class="comment-item__date">
-                                                <i class="far fa-clock me-1"></i>
-                                                Hier
-                                            </span>
+                                            {{-- Actions (si c'est le commentaire de l'utilisateur connecté) --}}
+                                            @auth
+                                                @if($commentaire->id_user === auth()->id())
+                                                    <div class="comment-item__actions">
+                                                        <button
+                                                            class="comment-action-btn"
+                                                            onclick="openEditModal({{ $commentaire->id }}, '{{ addslashes($commentaire->commentaire) }}', {{ $commentaire->note }})">
+                                                            <i class="fas fa-edit me-1"></i>
+                                                            Modifier
+                                                        </button>
+                                                        <form action="{{ route('commentaires.destroy.user', $commentaire) }}"
+                                                              method="POST"
+                                                              style="display:inline;"
+                                                              onclick="confirmDelete({{ $commentaire->id }})">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="comment-action-btn comment-action-btn--delete">
+                                                                <i class="fas fa-trash me-1"></i>
+                                                                Supprimer
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endif
+                                            @endauth
                                         </div>
-                                        <p class="comment-item__text">
-                                            Merci pour cet article !  Cela me rappelle les récits de mes grands-parents.  Continuez ce beau travail de préservation.
-                                        </p>
-                                        <div class="comment-item__actions">
-                                            <button class="comment-action-btn">
-                                                <i class="far fa-thumbs-up me-1"></i>
-                                                Aimer (15)
-                                            </button>
-                                            <button class="comment-action-btn">
-                                                <i class="fas fa-reply me-1"></i>
-                                                Répondre
-                                            </button>
-                                        </div>
                                     </div>
-                                </div>
+                                @empty
+                                    <div class="no-comments">
+                                        <i class="far fa-comment-dots"></i>
+                                        <p>Aucun commentaire pour le moment.</p>
+                                        <p class="text-muted">Soyez le premier à donner votre avis sur ce contenu culturel !</p>
+                                    </div>
+                                @endforelse
                             </div>
                         </section>
+
+                        {{-- Modal de modification --}}
+                        <div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-edit me-2"></i>
+                                            Modifier mon commentaire
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form id="editCommentForm" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="modal-body">
+                                            {{-- Étoiles pour modification --}}
+                                            <div class="rating-input mb-3">
+                                                <label class="rating-label">Votre note <span class="text-danger">*</span></label>
+                                                <div class="star-rating" id="editStarRating">
+                                                    <input type="radio" id="editStar5" name="note" value="5" required>
+                                                    <label for="editStar5" title="Excellent"><i class="fas fa-star"></i></label>
+
+                                                    <input type="radio" id="editStar4" name="note" value="4">
+                                                    <label for="editStar4" title="Très bien"><i class="fas fa-star"></i></label>
+
+                                                    <input type="radio" id="editStar3" name="note" value="3">
+                                                    <label for="editStar3" title="Bien"><i class="fas fa-star"></i></label>
+
+                                                    <input type="radio" id="editStar2" name="note" value="2">
+                                                    <label for="editStar2" title="Moyen"><i class="fas fa-star"></i></label>
+
+                                                    <input type="radio" id="editStar1" name="note" value="1">
+                                                    <label for="editStar1" title="Médiocre"><i class="fas fa-star"></i></label>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="editCommentText" class="form-label">Votre commentaire</label>
+                                                <textarea
+                                                    class="form-control"
+                                                    id="editCommentText"
+                                                    name="commentaire"
+                                                    rows="4"
+                                                    required
+                                                    minlength="3"
+                                                    maxlength="1000"
+                                                ></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                Annuler
+                                            </button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-save me-2"></i>
+                                                Enregistrer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1205,6 +1319,212 @@
         }
 
         /* ========================================
+   RATING SYSTEM (ÉTOILES)
+======================================== */
+        .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0. 5rem;
+            background: linear-gradient(135deg, var(--benin-yellow), var(--benin-yellow-dark));
+            color: #000;
+            padding: 0. 5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9375rem;
+            font-weight: 800;
+            margin-left: 1rem;
+            box-shadow: 0 2px 8px rgba(252, 209, 22, 0.4);
+        }
+
+        .rating-badge i {
+            color: #000;
+            font-size: 1rem;
+        }
+
+        /* Input de notation */
+        .rating-input {
+            margin-bottom: 1. 5rem;
+        }
+
+        .rating-label {
+            display: block;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--color-text);
+        }
+
+        .rating-selected {
+            display: inline-block;
+            margin-left: 0.5rem;
+            color: var(--benin-green);
+            font-weight: 700;
+        }
+
+        /* Système d'étoiles interactif */
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 0.375rem;
+        }
+
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+
+        .star-rating label {
+            cursor: pointer;
+            font-size: 2. 25rem;
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+            margin: 0;
+            position: relative;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: var(--benin-yellow);
+            transform: scale(1.1);
+        }
+
+        .star-rating label:active {
+            transform: scale(0.95);
+        }
+
+        .star-rating input[type="radio"]:checked ~ label {
+            color: var(--benin-yellow);
+            text-shadow: 0 0 8px rgba(252, 209, 22, 0.6);
+        }
+
+        /* Tooltip au survol */
+        .star-rating label[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.375rem 0.75rem;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Étoiles dans les commentaires affichés */
+        .comment-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-left: 0.75rem;
+        }
+
+        .comment-rating i {
+            font-size: 0.9375rem;
+        }
+
+        .star-filled {
+            color: var(--benin-yellow);
+        }
+
+        .star-empty {
+            color: #e2e8f0;
+        }
+
+        . rating-text {
+            font-size: 0.8125rem;
+            color: var(--color-text-light);
+            margin-left: 0.375rem;
+            font-weight: 600;
+        }
+
+        /* Badge "Vous" */
+        .comment-item--own {
+            background: rgba(0, 135, 81, 0.03);
+            border-color: var(--benin-green);
+        }
+
+        .comment-item__author-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0. 375rem;
+        }
+
+        /* Bouton supprimer */
+        .comment-action-btn--delete {
+            color: #e53e3e;
+        }
+
+        . comment-action-btn--delete:hover {
+            color: #c53030;
+            background: rgba(229, 62, 62, 0.1);
+        }
+
+        /* Message "aucun commentaire" */
+        . no-comments {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: var(--color-text-light);
+        }
+
+        . no-comments i {
+            font-size: 5rem;
+            color: var(--color-border);
+            margin-bottom: 1. 5rem;
+            opacity: 0.5;
+        }
+
+        . no-comments p {
+            font-size: 1.125rem;
+            margin: 0. 5rem 0;
+        }
+
+        /* Alert pour commentaire existant */
+        .user-existing-comment {
+            margin-bottom: 2rem;
+        }
+
+        .user-existing-comment . alert {
+            border-left: 4px solid var(--benin-green);
+        }
+
+        /* Modal */
+        .modal-header {
+            background: var(--color-bg-light);
+            border-bottom: 2px solid var(--benin-green);
+        }
+
+        .modal-title {
+            color: var(--benin-green);
+            font-weight: 700;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .rating-badge {
+                display: flex;
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+
+            .star-rating label {
+                font-size: 2rem;
+            }
+
+            . comment-item__header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .comment-item__date {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* ========================================
            RESPONSIVE
         ======================================== */
         @media (max-width: 768px) {
@@ -1279,6 +1599,7 @@
                 gap: 0.375rem;
             }
         }
+
     </style>
 @endpush
 
@@ -1306,5 +1627,180 @@
                 });
             }
         });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ========================================
+            // Système d'étoiles interactif
+            // ========================================
+            const starRating = document. getElementById('starRating');
+            const ratingText = document.getElementById('ratingText');
+
+            if (starRating && ratingText) {
+                const labels = {
+                    1: '⭐ Médiocre',
+                    2: '⭐⭐ Moyen',
+                    3: '⭐⭐⭐ Bien',
+                    4: '⭐⭐⭐⭐ Très bien',
+                    5: '⭐⭐⭐⭐⭐ Excellent'
+                };
+
+                starRating.querySelectorAll('input[type="radio"]').forEach(input => {
+                    input.addEventListener('change', function() {
+                        const value = this.value;
+                        ratingText.textContent = '- ' + labels[value];
+                        ratingText.style.color = 'var(--benin-green)';
+                    });
+                });
+            }
+
+            // ========================================
+            // Auto-dismiss alerts après 5 secondes
+            // ========================================
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert. close();
+                }, 5000);
+            });
+        });
+
+        // ========================================
+        // Ouvrir le modal de modification
+        // ========================================
+        function openEditModal(commentId, commentText, note) {
+            const modal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+            const form = document.getElementById('editCommentForm');
+            const textarea = document.getElementById('editCommentText');
+
+            // Définir l'action du formulaire
+            form.action = '/contenus/commentaires/' + commentId;
+
+            // Remplir le textarea
+            textarea.value = commentText;
+
+            // Cocher l'étoile correspondante
+            document.getElementById('editStar' + note).checked = true;
+
+            // Ouvrir le modal
+            modal. show();
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ========================================
+            // SWEETALERT2 - Messages de succès/erreur
+            // ========================================
+
+            @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Succès ! ',
+                text: '{{ session('success') }}',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#008751', // Vert Bénin
+                timer: 5000,
+                timerProgressBar: true,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+            });
+            @endif
+
+            @if($errors->any())
+            Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                html: '<ul style="text-align:left; padding-left:20px;">' +
+                    @foreach($errors->all() as $error)
+                        '<li>{{ $error }}</li>' +
+                    @endforeach
+                        '</ul>',
+                confirmButtonText: 'Compris',
+                confirmButtonColor: '#e53e3e',
+            });
+            @endif
+
+            // ========================================
+            // Système d'étoiles interactif
+            // ========================================
+            const starRating = document. getElementById('starRating');
+            const ratingText = document.getElementById('ratingText');
+
+            if (starRating && ratingText) {
+                const labels = {
+                    1: '⭐ Médiocre',
+                    2: '⭐⭐ Moyen',
+                    3: '⭐⭐⭐ Bien',
+                    4: '⭐⭐⭐⭐ Très bien',
+                    5: '⭐⭐⭐⭐⭐ Excellent'
+                };
+
+                starRating. querySelectorAll('input[type="radio"]').forEach(input => {
+                    input.addEventListener('change', function() {
+                        const value = this.value;
+                        ratingText.textContent = '- ' + labels[value];
+                        ratingText.style.color = 'var(--benin-green)';
+                    });
+                });
+            }
+
+            // ========================================
+            // Bookmark toggle
+            // ========================================
+            document.querySelectorAll('.btn-action--bookmark').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('far');
+                    icon.classList.toggle('fas');
+                });
+            });
+
+            // ========================================
+            // Sticky header scroll effect
+            // ========================================
+            const header = document.querySelector('.article-header');
+            if (header) {
+                window. addEventListener('scroll', function() {
+                    if (window.scrollY > 100) {
+                        header. classList.add('scrolled');
+                    } else {
+                        header. classList.remove('scrolled');
+                    }
+                });
+            }
+        });
+
+        // ========================================
+        // Ouvrir le modal de modification
+
+        // ========================================
+        // Confirmation de suppression avec SweetAlert2
+        // ========================================
+        function confirmDelete(form) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Supprimer ce commentaire ?',
+                text: "Cette action est irréversible ! ",
+                icon: 'warning',
+                iconColor: '#e53e3e',
+                showCancelButton: true,
+                confirmButtonColor: '#e53e3e',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fas fa-trash me-2"></i>Oui, supprimer',
+                cancelButtonText: 'Annuler',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
     </script>
 @endpush

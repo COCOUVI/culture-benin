@@ -111,4 +111,32 @@ class CommentaireController extends Controller
         $commentaire->delete();
         return redirect()->back()->with('success','commentaire supprimée avec succès');
     }
+
+    public function UpdateUserComment(Request $request, Commentaire $commentaire)
+    {
+        // Vérifier que c'est bien l'auteur
+        if ($commentaire->id_user !== auth()->id()) {
+            abort(403, 'Action non autorisée.');
+        }
+
+        // Validation
+        $validated = $request->validate([
+            'commentaire' => 'required|string|min:3|max:1000',
+            'note' => 'required|integer|between:1,5',
+        ], [
+            'commentaire.required' => 'Le commentaire est obligatoire.',
+            'commentaire.min' => 'Minimum 3 caractères.',
+            'commentaire.max' => 'Maximum 1000 caractères.',
+            'note.required' => 'Sélectionnez une note.',
+            'note.between' => 'La note doit être entre 1 et 5.',
+        ]);
+
+        // Mettre à jour
+        $commentaire->update([
+            'commentaire' => trim($validated['commentaire']),
+            'note' => $validated['note'],
+        ]);
+
+        return back()->with('success', '✅ Commentaire modifié ! ');
+    }
 }

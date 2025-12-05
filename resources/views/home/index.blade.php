@@ -46,7 +46,7 @@
                                         <span>Langues</span>
                                     </div>
                                     <div class="stat-item mx-3">
-                                        <strong>150+</strong>
+                                        <strong>{{ $contributeurs }}</strong>
                                         <span>Contributeurs</span>
                                     </div>
                                 </div>
@@ -70,9 +70,9 @@
                                         <i class="fas fa-drum"></i>
                                         <span>Découvrir les traditions</span>
                                     </a>
-                                    <a href="#videos" class="btn btn-outline-light btn-lg">
+                                    <a href="{{route('media.all')}}" class="btn btn-outline-light btn-lg">
                                         <i class="fas fa-play-circle"></i>
-                                        <span>Voir les vidéos</span>
+                                        <span>Voir les Medias</span>
                                     </a>
                                 </div>
                             </div>
@@ -101,12 +101,10 @@
                                     </a>
                                 </div>
                                 <div class="hero-languages">
-                                    <span class="language-tag">Fon</span>
-                                    <span class="language-tag">Yoruba</span>
-                                    <span class="language-tag">Dendi</span>
-                                    <span class="language-tag">Goun</span>
-                                    <span class="language-tag">Bariba</span>
-                                    <span class="language-tag">+7 autres</span>
+                                    @foreach($langues as $langue)
+                                        <span class="language-tag">{{$langue->nom_langue}}</span>
+                                    @endforeach
+                                    <span class="language-tag">+ autres</span>
                                 </div>
                             </div>
                         </div>
@@ -134,10 +132,10 @@
                                     </a>
                                 </div>
                                 <div class="hero-regions">
-                                    <div class="region-chip">🏔️ Atacora</div>
-                                    <div class="region-chip">🏛️ Atlantique</div>
-                                    <div class="region-chip">🌊 Littoral</div>
-                                    <div class="region-chip">🌴 Mono</div>
+                                    @foreach($regions as $region)
+                                        <div class="region-chip">{{$region->nom_region}}</div>
+                                    @endforeach
+
                                 </div>
                             </div>
                         </div>
@@ -192,10 +190,10 @@
                 <div class="col-md-4">
                     <article class="feature-card card">
                         <div class="feature-icon" aria-hidden="true">
-                            <i class="fas fa-map-marked-alt"></i>
+                            <i class="fas fa-photo-video"></i>
                         </div>
-                        <h3 class="h5">Régional</h3>
-                        <p>Découvrez les spécificités culturelles de chaque région du Bénin, de l'Atacora au Mono.</p>
+                        <h3 class="h5">Média riche</h3>
+                        <p>Découvrez une collection riche d'images, vidéos et audios documentant la culture béninoise.</p>
                     </article>
                 </div>
             </div>
@@ -203,8 +201,8 @@
     </section>
 
     <!-- Recent Content Carousel Section -->
-    <section id="contenus" class="py-5 bg-light">
-        <div class="container">
+    <section class="py-5 bg-light">
+        <div class="container" id="contenus">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="section-title mb-0">Contenus récents</h2>
 
@@ -347,12 +345,128 @@
         </div>
     </section>
 
-    <!-- Regions Section -->
-    <section id="regions" class="py-5">
+    <!-- Media Section -->
+    <section id="medias" class="py-5">
         <div class="container">
-            <h2 class="section-title">Explorez par région</h2>
+            <h2 class="section-title">Galerie des médias</h2>
+            <p class="text-center text-muted mb-5">Découvrez notre collection d'images, vidéos et audios documentant la culture béninoise</p>
+
             <div class="row g-4">
-                @include('partials.region-cards')
+
+                @forelse($medias as $media)
+                    <div class="col-md-4 col-lg-3">
+                        <article class="media-card card h-100">
+                            <div class="media-card-header">
+                                @if($media->isImage())
+                                    <div class="media-thumbnail">
+                                        <img src="{{ asset('storage/' . $media->chemin) }}"
+                                             alt="{{ $media->description ?: 'Image culturelle' }}"
+                                             class="img-fluid">
+                                        <span class="media-type-badge badge bg-success">
+                                            <i class="fas fa-image"></i> Image
+                                        </span>
+                                    </div>
+                                @elseif($media->isVideo())
+                                    <div class="media-thumbnail video-thumbnail">
+                                        <div class="video-player-wrapper">
+                                            <video class="video-thumbnail-player"
+                                                   preload="metadata"
+                                                   muted
+                                                   playsinline
+                                                   ">
+                                                <source src="{{ asset('storage/' . $media->chemin) }}" type="video/mp4">
+                                                Votre navigateur ne supporte pas la lecture de vidéos.
+                                            </video>
+                                            <div class="video-overlay">
+                                                <button class="play-btn" onclick="openVideoModal('{{ asset('storage/' . $media->chemin) }}', '{{ $media->contenu->titre ?? 'Vidéo culturelle' }}')">
+                                                    <i class="fas fa-play-circle"></i>
+                                                </button>
+                                                <p class="video-duration" id="duration-{{ $media->id }}">--:--</p>
+                                            </div>
+                                            <span class="media-type-badge badge bg-primary">
+                                                <i class="fas fa-video"></i> Vidéo
+                                            </span>
+                                        </div>
+                                    </div>
+                                @elseif($media->isAudio())
+                                    <div class="media-thumbnail audio-thumbnail">
+                                        <div class="audio-placeholder">
+                                            <i class="fas fa-music"></i>
+                                            <p>Audio</p>
+                                        </div>
+                                        <span class="media-type-badge badge bg-warning text-dark">
+                                            <i class="fas fa-headphones"></i> Audio
+                                        </span>
+                                    </div>
+                                @else
+                                    <div class="media-thumbnail">
+                                        <div class="file-placeholder">
+                                            <i class="fas fa-file"></i>
+                                            <p>Fichier</p>
+                                        </div>
+                                        <span class="media-type-badge badge bg-secondary">
+                                            <i class="fas fa-file-alt"></i> Document
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="card-body">
+                                <h6 class="card-title mb-2">
+                                    {{ $media->contenu->titre ?? 'Média sans titre' }}
+                                </h6>
+
+                                @if($media->description)
+                                    <p class="card-text small text-muted mb-2">
+                                        {{ \Illuminate\Support\Str::limit($media->description, 80) }}
+                                    </p>
+                                @endif
+
+                                <div class="media-meta small text-muted">
+                                    <div class="mb-1">
+                                        <i class="fas fa-language"></i>
+                                        {{ optional($media->contenu->langue)->nom_langue ?? 'Non spécifié' }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        {{ optional($media->contenu->region)->nom_region ?? 'Non spécifié' }}
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-calendar"></i>
+                                        {{ $media->created_at->format('d/m/Y') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-transparent border-top-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-file-signature"></i>
+                                        {{ strtoupper($media->getExtension()) }}
+                                    </small>
+                                    <a href="{{ route('contenu.detail', $media->contenu->id ?? '#') }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Voir
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                @empty
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Aucun média disponible pour le moment.
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="{{ route('media.all') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-photo-video me-2"></i>
+                    Voir tous les médias
+                </a>
             </div>
         </div>
     </section>
@@ -362,20 +476,20 @@
         <div class="container">
             <div class="row text-center">
                 <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-number" aria-label="250 contenus culturels">250+</div>
+                    <div class="stat-number" aria-label="{{  $nbr_contenus ?? '0' }} contenus culturels">{{  $nbr_contenus?? '0' }}+</div>
                     <p>Contenus culturels</p>
                 </div>
                 <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-number" aria-label="12 langues représentées">12</div>
+                    <div class="stat-number" aria-label="{{ $nbr_langues ?? '0' }} langues représentées">{{ $nbr_langues ?? '0' }}</div>
                     <p>Langues représentées</p>
                 </div>
                 <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-number" aria-label="150 contributeurs actifs">150+</div>
-                    <p>Contributeurs actifs</p>
+                    <div class="stat-number" aria-label="{{ $totalCommentaires ?? '0' }} commentaires">{{ $totalCommentaires ?? '0' }}+</div>
+                    <p>Commentaires</p>
                 </div>
                 <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-number" aria-label="8 régions couvertes">8</div>
-                    <p>Régions couvertes</p>
+                    <div class="stat-number" aria-label="{{ $totalUsers ?? '0' }} utilisateurs">{{ $totalUsers ?? '0' }}+</div>
+                    <p>Utilisateurs</p>
                 </div>
             </div>
         </div>
@@ -765,6 +879,193 @@
             opacity: 1;
         }
 
+        /* Media Cards Styles */
+        .media-card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            height: 100%;
+        }
+
+        .media-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .media-card-header {
+            position: relative;
+            overflow: hidden;
+            height: 180px;
+        }
+
+        .media-thumbnail {
+            width: 100%;
+            height: 100%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .media-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-thumbnail {
+            background: #000;
+        }
+
+        .audio-thumbnail {
+            background: linear-gradient(135deg, #FCD116, #e6b800);
+        }
+
+        .video-placeholder,
+        .audio-placeholder,
+        .file-placeholder {
+            text-align: center;
+            color: white;
+        }
+
+        .video-placeholder i,
+        .audio-placeholder i,
+        .file-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .media-type-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            z-index: 2;
+        }
+
+        .media-meta {
+            font-size: 0.875rem;
+        }
+
+        .media-meta i {
+            width: 20px;
+            margin-right: 5px;
+            text-align: center;
+        }
+
+        /* Video Player Styles */
+        .video-player-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .video-thumbnail-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            background: #000;
+        }
+
+        .media-card:hover .video-thumbnail-player {
+            transform: scale(1.05);
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .media-card:hover .video-overlay {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .play-btn {
+            background: rgba(0, 135, 81, 0.8);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .play-btn:hover {
+            background: rgba(0, 135, 81, 1);
+            transform: scale(1.1);
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        /* Video Modal */
+        .video-modal .modal-dialog {
+            max-width: 800px;
+        }
+
+        .video-modal .modal-content {
+            background: #000;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .video-modal .modal-header {
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid #333;
+            color: white;
+        }
+
+        .video-modal .modal-body {
+            padding: 0;
+        }
+
+        .video-modal video {
+            width: 100%;
+            max-height: 500px;
+            display: block;
+        }
+
+        .video-modal .modal-footer {
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid #333;
+        }
+
+        .btn-close-white {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
         /* Responsive */
         @media (max-width: 992px) {
             .hero-carousel-section {
@@ -839,6 +1140,7 @@
         }
     </style>
 @endpush
+
 @push('scripts')
     <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
     <script>
@@ -939,7 +1241,87 @@
                     recentCarouselEl.addEventListener('mouseleave', () => recentCarousel.cycle());
                 }
             }
+
+            // Gérer les vidéos
+            document.querySelectorAll('.video-thumbnail-player').forEach(video => {
+                // Calculer et afficher la durée de la vidéo
+                video.addEventListener('loadedmetadata', function() {
+                    const duration = Math.floor(video.duration);
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = duration % 60;
+                    const videoId = video.closest('.video-player-wrapper').querySelector('.video-duration').id.replace('duration-', '');
+                    document.querySelector('#duration-' + videoId).textContent =
+                        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+                });
+
+                // Lecture automatique au survol
+                const thumbnailWrapper = video.closest('.media-thumbnail');
+                thumbnailWrapper.addEventListener('mouseenter', function() {
+                    video.play();
+                });
+                thumbnailWrapper.addEventListener('mouseleave', function() {
+                    video.pause();
+                    video.currentTime = 0;
+                });
+            });
         });
+
+        // Fonction pour ouvrir la modal vidéo
+        function openVideoModal(videoUrl, videoTitle) {
+            const modalHtml = `
+                <div class="modal fade video-modal" id="videoModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${videoTitle}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <video controls controlsList="nodownload" style="width:100%;">
+                                    <source src="${videoUrl}" type="video/mp4">
+                                    Votre navigateur ne supporte pas la lecture de vidéos.
+                                </video>
+                            </div>
+                            <div class="modal-footer">
+                                <a href="${videoUrl}" download class="btn btn-outline-light">
+                                    <i class="fas fa-download me-2"></i>
+                                    Télécharger
+                                </a>
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                    Fermer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Ajouter la modal au DOM
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Initialiser et afficher la modal
+            const videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
+
+            // Détruire la modal après fermeture
+            document.getElementById('videoModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
+
+            // Afficher la modal
+            videoModal.show();
+        }
+    </script>
+    <script>
+        // Solution ultra simple
+        setTimeout(() => {
+            document.querySelectorAll('#heroCarousel a').forEach(a => {
+                a.onclick = (e) => {
+                    if (a.href.includes('#')) {
+                        e.preventDefault();
+                        document.querySelector(a.hash)?.scrollIntoView({behavior: 'smooth'});
+                    }
+                };
+            });
+        }, 500);
     </script>
 @endpush
-

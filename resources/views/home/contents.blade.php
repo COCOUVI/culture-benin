@@ -14,7 +14,7 @@
                         Découvrez Notre Patrimoine Culturel
                     </h1>
                     <p class="hero-header__subtitle">
-                        Explorez {{ $contents->count() }} contenus authentiques sur la richesse culturelle du Bénin
+                        Explorez {{ $contents->total() }} contenus authentiques sur la richesse culturelle du Bénin
                     </p>
                 </div>
             </div>
@@ -25,7 +25,7 @@
     <section class="filters-section">
         <div class="container">
             <div class="filters-card">
-                <form method="GET" action="" class="filters-form">
+                <form method="GET" action="{{ route('contenus.all') }}" class="filters-form">
                     <div class="row g-3 align-items-end">
                         <!-- Search -->
                         <div class="col-lg-4 col-md-6">
@@ -49,9 +49,8 @@
                             </label>
                             <select name="langue_id" id="langue" class="form-select">
                                 <option value="">Toutes les langues</option>
-                                @foreach($langues ??  [] as $langue)
-                                    <option
-                                        value="{{ $langue->id }}" {{ request('langue_id') == $langue->id ?   'selected' : '' }}>
+                                @foreach($langues as $langue)
+                                    <option value="{{ $langue->id }}" {{ request('langue_id') == $langue->id ?  'selected' : '' }}>
                                         {{ $langue->nom_langue }}
                                     </option>
                                 @endforeach
@@ -65,9 +64,8 @@
                             </label>
                             <select name="region_id" id="region" class="form-select">
                                 <option value="">Toutes les régions</option>
-                                @foreach($regions ??  [] as $region)
-                                    <option
-                                        value="{{ $region->id }}" {{ request('region_id') == $region->id ?  'selected' : '' }}>
+                                @foreach($regions as $region)
+                                    <option value="{{ $region->id }}" {{ request('region_id') == $region->id ? 'selected' : '' }}>
                                         {{ $region->nom_region }}
                                     </option>
                                 @endforeach
@@ -84,7 +82,7 @@
 
                     @if(request()->hasAny(['q', 'langue_id', 'region_id']))
                         <div class="mt-3">
-                            <a href="{{ route('contenus.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <a href="{{ route('contenus.all') }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-times me-2"></i>Réinitialiser les filtres
                             </a>
                         </div>
@@ -155,7 +153,7 @@
                                     <div class="content-card__meta">
                                         <span class="badge-langue">
                                             <i class="fas fa-language me-1"></i>
-                                            {{ optional($contenu->langue)->nom_langue ??  '—' }}
+                                            {{ optional($contenu->langue)->nom_langue ?? '—' }}
                                         </span>
                                         <span class="content-card__date">
                                             <i class="far fa-clock me-1"></i>
@@ -165,7 +163,7 @@
 
                                     <!-- Title -->
                                     <h3 class="content-card__title">
-                                        <a href="">
+                                        <a href="{{ route('contenu.detail', $contenu->id) }}">
                                             {{ $contenu->titre ?? 'Sans titre' }}
                                         </a>
                                     </h3>
@@ -182,32 +180,22 @@
                                             {{ optional($contenu->region)->nom_region ?? '—' }}
                                         </div>
 
-                                        {{-- ✅ Boutons conditionnels avec paiement --}}
+                                        {{-- Boutons conditionnels avec paiement --}}
                                         @auth
-                                            {{-- User connecté --}}
                                             @if(auth()->user()->isAdmin() || auth()->user()->aPaye($contenu))
-                                                {{-- Admin OU a payé = Accès direct --}}
-                                                <a href="{{ route('contenu.detail', $contenu->id) }}"
-                                                   class="btn btn-sm btn-success">
-                                                    <i class="fas fa-book-open me-1"></i>
-                                                    Lire
+                                                <a href="{{ route('contenu.detail', $contenu->id) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-book-open me-1"></i>Lire
                                                 </a>
                                             @else
-                                                {{-- Connecté mais pas payé = Bouton Payer --}}
-                                                <button type="button"
-                                                        class="btn btn-sm btn-warning btn-pay-content"
+                                                <button type="button" class="btn btn-sm btn-warning btn-pay-content"
                                                         data-contenu-id="{{ $contenu->id }}"
                                                         data-contenu-titre="{{ addslashes($contenu->titre) }}">
-                                                    <i class="fas fa-lock me-1"></i>
-                                                    Payer 100 F
+                                                    <i class="fas fa-lock me-1"></i>Payer 100 F
                                                 </button>
                                             @endif
                                         @else
-                                            {{-- Non connecté = Bouton Connexion --}}
-                                            <a href="{{ route('login') }}"
-                                               class="btn btn-sm btn-primary">
-                                                <i class="fas fa-sign-in-alt me-1"></i>
-                                                Se connecter
+                                            <a href="{{ route('login') }}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-sign-in-alt me-1"></i>Se connecter
                                             </a>
                                         @endauth
                                     </div>
@@ -219,7 +207,7 @@
 
                 <!-- Pagination -->
                 <div class="pagination-wrapper">
-                    {{ $contents->withQueryString()->links('pagination::bootstrap-5') }}
+                    {{ $contents->appends(request()->query())->links('pagination::bootstrap-5') }}
                 </div>
             @endif
         </div>

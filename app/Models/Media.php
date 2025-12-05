@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Media
- * 
+ *
  * @property int $id
  * @property string $chemin
  * @property string $description
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id_type_media
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Contenu $contenu
  * @property TypeMedia $type_media
  *
@@ -50,4 +50,36 @@ class Media extends Model
 	{
 		return $this->belongsTo(TypeMedia::class, 'id_type_media');
 	}
+
+    /**
+     * Déterminer si le média est une vidéo
+     */
+    public function isVideo()
+    {
+        return in_array($this->type_media->nom ??  '', ['Vidéo', 'Video', 'video']);
+    }
+
+    /**
+     * Déterminer si le média est un audio
+     */
+    public function isAudio()
+    {
+        return in_array($this->type_media->nom ?? '', ['AUDIO', 'audio', 'Son']);
+    }
+
+    /**
+     * Déterminer si le média est une image
+     */
+    public function isImage()
+    {
+        return in_array($this->type_media->nom ?? '', ['IMAGE', 'image', 'Photo', 'photo']);
+    }
+
+    /**
+     * Obtenir l'extension du fichier
+     */
+    public function getExtension()
+    {
+        return pathinfo($this->chemin, PATHINFO_EXTENSION);
+    }
 }
