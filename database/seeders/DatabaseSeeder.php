@@ -26,7 +26,8 @@ class DatabaseSeeder extends Seeder
 //            RoleSeeder::class,
 //           RegionSeeder::class,
 //           LangueSeeder::class,
-             UserSeeder::class
+            //  UserSeeder::class
+            ContenuSeeder::class
         ]);
     }
 }
