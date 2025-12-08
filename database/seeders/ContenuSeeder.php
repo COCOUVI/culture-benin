@@ -23,7 +23,7 @@ class ContenuSeeder extends Seeder
             'region_id' => 2,            // Ouidah
             'langue_id' => 3,            // Fongbé
             'type_contenu_id' => 1,      // Recette
-            'id_auteur' => 1,
+            'id_auteur' => 12,
             'id_moderateur' => null,
             'parent_id' => null
         ]);
@@ -43,7 +43,7 @@ class ContenuSeeder extends Seeder
             'region_id' => 1,            // NIKKI
             'langue_id' => 1,            // Minan
             'type_contenu_id' => 2,      // Histoire
-            'id_auteur' => 1,
+            'id_auteur' => 13,
             'id_moderateur' => null,
             'parent_id' => null
         ]);
@@ -62,7 +62,7 @@ class ContenuSeeder extends Seeder
             'region_id' => 3,          // Parakou
             'langue_id' => 2,          // Minan1
             'type_contenu_id' => 3,    // Conte
-            'id_auteur' => 1,
+            'id_auteur' => 13,
             'id_moderateur' => null,
             'parent_id' => null
         ]);
@@ -81,7 +81,7 @@ class ContenuSeeder extends Seeder
             'region_id' => 2,         // Ouidah
             'langue_id' => 3,         // Fongbé
             'type_contenu_id' => 4,   // Article
-            'id_auteur' => 1,
+            'id_auteur' => 12,
             'id_moderateur' => null,
             'parent_id' => null
         ]);
