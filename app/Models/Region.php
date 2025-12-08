@@ -1,44 +1,23 @@
 <?php
 
-namespace Database\Seeders;
+namespace App\Models;
 
-use Illuminate\Database\Seeder;
-use App\Models\Region;
+use Illuminate\Database\Eloquent\Model;
 
-class RegionSeeder extends Seeder
+class Region extends Model
 {
-    public function run(): void
-    {
-        Region::create([
-            'nom_region' => 'NIKKI',
-            'description_region' => "c'est une region",
-            'population' => 100000,
-            'superficie' => 23340.9,
-            'localisation' => "Nord Atacora"
-        ]);
+    //
+    protected $fillable = [
+        'nom_region',
+        'description_region',
+        'population',
+        'superficie',
+        'localisation',
 
-        Region::create([
-            'nom_region' => 'Ouidah',
-            'description_region' => "c'est une region",
-            'population' => 100000,
-            'superficie' => 23340.9,
-            'localisation' => "Atlantique"
-        ]);
+    ];
 
-        Region::create([
-            'nom_region' => 'Parakou',
-            'description_region' => "c'est une region",
-            'population' => 100000,
-            'superficie' => 23340.9,
-            'localisation' => "Atacora"
-        ]);
-
-        Region::create([
-            'nom_region' => 'TchaTou',
-            'description_region' => "c'est une region",
-            'population' => 100000,
-            'superficie' => 23340.9,
-            'localisation' => "Atacora"
-        ]);
-    }
+    protected $casts = [
+        "population" => "integer",
+        "superficie" => "double"
+    ];
 }
