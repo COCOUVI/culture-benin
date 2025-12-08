@@ -14,7 +14,7 @@ class TypeMediaController extends Controller
     {
         //
         $mediaTypes = TypeMedia::all();
-        return view('TypeMedia.index', compact('mediaTypes'));
+        return view('Typemedia.index', compact('mediaTypes'));
     }
 
     /**
