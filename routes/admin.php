@@ -13,7 +13,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::prefix('/admin')->middleware(['auth','admin.ou.manager','2fa'])->group(function () {
+Route::prefix('/admin')->middleware(['auth','admin.ou.manager'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::resource('langues', LangueController::class);
     Route::resource('roles', RoleController::class);
