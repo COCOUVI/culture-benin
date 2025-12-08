@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\TestMailController;
 use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'accueil'])->name('accueil');
 
@@ -27,3 +28,5 @@ Route::prefix('media')->group(function () {
     Route::get('/{media}',[HomeController::class, 'OneMedia'])->name('media.detail');
 
 });
+
+Route::get('/send-test-email', [TestMailController::class, 'sendTest']);
