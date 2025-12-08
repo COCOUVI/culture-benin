@@ -23,7 +23,7 @@ class TypeMediaController extends Controller
     public function create()
     {
         //
-        return view('TypeMedia.create');
+        return view('Typemedia.create');
     }
 
     /**
