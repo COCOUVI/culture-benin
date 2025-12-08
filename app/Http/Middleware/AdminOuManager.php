@@ -22,11 +22,12 @@ class AdminOuManager
 
         $user = Auth::user();
 
-        // Vérifier si l'utilisateur est admin (id_role = 4) ou manager (id_role = 5)
-        if ($user->id_role !== 4 && $user->id_role !== 5) {
+        // Vérifier admin ou manager via les méthodes du modèle
+        if (!$user->isAdminOrManager()) {
             abort(403, 'Accès non autorisé.');
         }
 
         return $next($request);
     }
+
 }

@@ -20,79 +20,49 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
-        // Gates pour l'accès aux modules (Admins et Managers)
-        Gate::define('access-users', function ($user) {
-            return $user->id_role === 4;
-        }); 
+        $this->registerPolicies();
 
-        Gate::define('access-type-media', function ($user) {
-            return $user->id_role === 4;
-        });
+        /**
+         * Gates selon rôle
+         * Tu as déjà :
+         * - isAdmin()
+         * - isManager()
+         * - isAdminOrManager()
+         */
 
-        Gate::define('access-type-contenu', function ($user) {
-            return $user->id_role === 4;
-        });
+        // Accès autorisé aux admins et managers
+        $accessGates = [
+            'access-users',
+            'access-type-media',
+            'access-type-contenu',
+            'access-medias',
+            'access-contenu',
+            'access-langues',
+            'access-regions',
+            'access-commentaires',
+            'access-roles',
+        ];
 
-        Gate::define('access-medias', function ($user) {
-            return $user->id_role === 4;
-        });
+        foreach ($accessGates as $gate) {
+            Gate::define($gate, fn($user) => $user->isAdminOrManager());
+        }
 
-        Gate::define('access-contenu', function ($user) {
-            return $user->id_role === 4;
-        });
+        // Suppression réservée uniquement aux admins
+        $deleteGates = [
+            'delete-users',
+            'delete-type-media',
+            'delete-type-contenu',
+            'delete-medias',
+            'delete-contenus',
+            'delete-langues',
+            'delete-regions',
+            'delete-commentaires',
+            'delete-roles',
+        ];
 
-        Gate::define('access-langues', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('access-regions', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('access-commentaires', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('access-roles', function ($user) {
-            return $user->id_role === 4; // Uniquement les admins
-        });
-
-        // Gates pour la suppression (UNIQUEMENT les admins)
-        Gate::define('delete-users', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-type-media', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-type-contenu', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-medias', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-contenus', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-langues', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-regions', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-commentaires', function ($user) {
-            return $user->id_role === 4;
-        });
-
-        Gate::define('delete-roles', function ($user) {
-            return $user->id_role === 4;
-        });
+        foreach ($deleteGates as $gate) {
+            Gate::define($gate, fn($user) => $user->isAdmin());
+        }
     }
+
 }
