@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('commentaires', function (Blueprint $table) {
             $table->id();
-            $table->text('commentaire')->nullable()->index();
-            $table->integer('note')->nulllable();
+            $table->text('commentaire')->nullable();
+            $table->integer('note')->nullable();;
             $table->foreignId('id_user')->constrained('users');
             $table->foreignId('id_contenu')->constrained('contenus');
             $table->timestamps();
