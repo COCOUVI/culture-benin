@@ -1,6 +1,6 @@
 @extends('layouts.app1')
 
-@section('title', $contenu->titre .  ' - Culture Bénin')
+@section('title', $contenu->titre . ' - Culture Bénin')
 
 @section('content')
     <article class="article-detail">
@@ -16,7 +16,7 @@
                             <!-- Category Badge -->
                             <div class="article-hero__category">
                                 <span class="hero-category-badge">
-                                    {{ optional($contenu->type_contenu)->nom ??  'Culture' }}
+                                    {{ optional($contenu->type_contenu)->nom ?? 'Culture' }}
                                 </span>
                             </div>
 
@@ -37,7 +37,7 @@
                                 <span class="hero-meta__separator">•</span>
                                 <span class="hero-meta__item">
                                     <i class="far fa-clock"></i>
-                                     {{ optional($contenu->created_at)->diffForHumans() ?? '' }}
+                                    {{ optional($contenu->created_at)->diffForHumans() ?? '' }}
                                 </span>
                                 <span class="hero-meta__separator">•</span>
                                 <span class="hero-meta__item">
@@ -57,10 +57,12 @@
                     <div class="col-lg-10 col-xl-8">
                         <div class="article-author-bar">
                             <div class="author-bar__avatar">
-                                @if(optional($contenu->auteur)->photo)
+                                @if (optional($contenu->auteur)->photo)
                                     @php
                                         $authorIsCloudinary = str_contains($contenu->auteur->photo, 'cloudinary');
-                                        $authorPhotoUrl = $authorIsCloudinary ?   $contenu->auteur->photo : asset('storage/' . $contenu->auteur->photo);
+                                        $authorPhotoUrl = $authorIsCloudinary
+                                            ? $contenu->auteur->photo
+                                            : asset('storage/' . $contenu->auteur->photo);
                                     @endphp
                                     <img src="{{ $authorPhotoUrl }}" alt="{{ $contenu->auteur->nom }}">
                                 @else
@@ -71,7 +73,8 @@
                             </div>
                             <div class="author-bar__info">
                                 <div class="author-bar__name">
-                                    {{ optional($contenu->auteur)->prenom ?? 'Culture' }} {{ optional($contenu->auteur)->nom ?? 'Bénin' }}
+                                    {{ optional($contenu->auteur)->prenom ?? 'Culture' }}
+                                    {{ optional($contenu->auteur)->nom ?? 'Bénin' }}
                                 </div>
                                 <div class="author-bar__meta">
                                     Contributeur culturel
@@ -97,32 +100,32 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-10 col-xl-8">
                         <!-- Featured Image -->
-                        @if($contenu->media->first())
+                        @if ($contenu->media->first())
                             @php
                                 $firstMedia = $contenu->media->first();
                                 $mediaIsCloudinary = str_contains($firstMedia->chemin, 'cloudinary');
-                                $mediaUrl = $mediaIsCloudinary ?  $firstMedia->chemin : asset('storage/' . $firstMedia->chemin);
+                                $mediaUrl = $mediaIsCloudinary
+                                    ? $firstMedia->chemin
+                                    : asset('storage/' . $firstMedia->chemin);
                             @endphp
                             <figure class="article-featured-image">
                                 <div class="article-featured-image__wrapper">
-                                    <img src="{{ $mediaUrl }}"
-                                         alt="{{ $contenu->titre }}"
-                                         loading="eager">
+                                    <img src="{{ $mediaUrl }}" alt="{{ $contenu->titre }}" loading="eager">
                                 </div>
                                 <figcaption class="article-featured-image__caption">
                                     <i class="fas fa-camera me-2"></i>
                                     {{ $contenu->titre }}
-                                    @if($mediaIsCloudinary)
+                                    @if ($mediaIsCloudinary)
                                         <span class="badge bg-success ms-2">
-                    <i class="fas fa-cloud me-1"></i>CDN
-                </span>
+                                            <i class="fas fa-cloud me-1"></i>cloudinary
+                                        </span>
                                     @endif
                                 </figcaption>
                             </figure>
                         @endif
 
                         <!-- Introduction -->
-                        @if($contenu->introduction)
+                        @if ($contenu->introduction)
                             <div class="article-intro">
                                 <p class="lead">{{ $contenu->introduction }}</p>
                             </div>
@@ -134,14 +137,14 @@
                         </div>
 
                         <!-- Tags -->
-                        @if($contenu->tags)
+                        @if ($contenu->tags)
                             <section class="article-tags">
                                 <h4 class="section-heading">
                                     <i class="fas fa-tags me-2"></i>
                                     Mots-clés
                                 </h4>
                                 <div class="tags-list">
-                                    @foreach(explode(',', $contenu->tags) as $tag)
+                                    @foreach (explode(',', $contenu->tags) as $tag)
                                         <span class="tag-item">{{ trim($tag) }}</span>
                                     @endforeach
                                 </div>
@@ -157,30 +160,22 @@
                                 </h4>
                                 <div class="share-buttons">
                                     <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(Request::url()) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="share-btn share-btn--facebook">
+                                        target="_blank" rel="noopener noreferrer" class="share-btn share-btn--facebook">
                                         <i class="fab fa-facebook-f"></i>
                                         <span>Facebook</span>
                                     </a>
                                     <a href="https://twitter.com/intent/tweet? url={{ urlencode(Request::url()) }}&text={{ urlencode($contenu->titre) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="share-btn share-btn--twitter">
+                                        target="_blank" rel="noopener noreferrer" class="share-btn share-btn--twitter">
                                         <i class="fab fa-twitter"></i>
                                         <span>Twitter</span>
                                     </a>
-                                    <a href="https://wa.me/?text={{ urlencode($contenu->titre .  ' - ' . Request::url()) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="share-btn share-btn--whatsapp">
+                                    <a href="https://wa.me/?text={{ urlencode($contenu->titre . ' - ' . Request::url()) }}"
+                                        target="_blank" rel="noopener noreferrer" class="share-btn share-btn--whatsapp">
                                         <i class="fab fa-whatsapp"></i>
                                         <span>WhatsApp</span>
                                     </a>
                                     <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(Request::url()) }}&title={{ urlencode($contenu->titre) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="share-btn share-btn--linkedin">
+                                        target="_blank" rel="noopener noreferrer" class="share-btn share-btn--linkedin">
                                         <i class="fab fa-linkedin-in"></i>
                                         <span>LinkedIn</span>
                                     </a>
@@ -198,10 +193,15 @@
                             </div>
                             <div class="author-bio__card">
                                 <div class="author-bio__avatar">
-                                    @if(optional($contenu->auteur)->photo)
+                                    @if (optional($contenu->auteur)->photo)
                                         @php
-                                            $authorBioIsCloudinary = str_contains($contenu->auteur->photo, 'cloudinary');
-                                            $authorBioPhotoUrl = $authorBioIsCloudinary ? $contenu->auteur->photo : asset('storage/' .  $contenu->auteur->photo);
+                                            $authorBioIsCloudinary = str_contains(
+                                                $contenu->auteur->photo,
+                                                'cloudinary',
+                                            );
+                                            $authorBioPhotoUrl = $authorBioIsCloudinary
+                                                ? $contenu->auteur->photo
+                                                : asset('storage/' . $contenu->auteur->photo);
                                         @endphp
                                         <img src="{{ $authorBioPhotoUrl }}" alt="{{ $contenu->auteur->nom }}">
                                     @else
@@ -215,7 +215,9 @@
                                         {{ optional($contenu->auteur)->prenom }} {{ optional($contenu->auteur)->nom }}
                                     </h5>
                                     <p class="author-bio__description">
-                                        Contributeur passionné de culture béninoise, partageant ses connaissances pour préserver notre patrimoine culturel et transmettre nos traditions aux générations futures.
+                                        Contributeur passionné de culture béninoise, partageant ses connaissances pour
+                                        préserver notre patrimoine culturel et transmettre nos traditions aux générations
+                                        futures.
                                     </p>
                                 </div>
                             </div>
@@ -227,49 +229,57 @@
                                 <h4 class="section-heading">
                                     <i class="fas fa-comments me-2"></i>
                                     Commentaires ({{ $nombreCommentaires }})
-                                    @if($nombreCommentaires > 0)
+                                    @if ($nombreCommentaires > 0)
                                         <span class="rating-badge">
-                    <i class="fas fa-star"></i>
-                    {{ number_format($noteMoyenne, 1) }}/5
-                </span>
+                                            <i class="fas fa-star"></i>
+                                            {{ number_format($noteMoyenne, 1) }}/5
+                                        </span>
                                     @endif
                                 </h4>
                             </div>
 
                             {{-- Messages de succès --}}
-                            @if(session('success'))
+                            @if (session('success'))
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                                     <i class="fas fa-check-circle me-2"></i>
                                     {{ session('success') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
                                 </div>
                             @endif
 
                             {{-- Messages d'erreur --}}
-                            @if($errors->any())
+                            @if ($errors->any())
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     <ul class="mb-0">
-                                        @foreach($errors->all() as $error)
+                                        @foreach ($errors->all() as $error)
                                             <li>{{ $error }}</li>
                                         @endforeach
                                     </ul>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
                                 </div>
                             @endif
 
                             {{-- Formulaire d'ajout de commentaire (utilisateur connecté) --}}
                             @auth
-                                @if(!$userComment)
+                                @if (!$userComment)
                                     {{-- L'utilisateur n'a pas encore commenté --}}
                                     <div class="comment-form-wrapper">
-                                        <form action="{{ route('comment.store', $contenu) }}" method="POST" class="comment-form" id="commentForm">
+                                        <form action="{{ route('comment.store', $contenu) }}" method="POST"
+                                            class="comment-form" id="commentForm">
                                             @csrf
                                             <div class="comment-form__avatar">
-                                                @if(auth()->user()->photo)
+                                                @if (auth()->user()->photo)
                                                     @php
-                                                        $userPhotoIsCloudinary = str_contains(auth()->user()->photo, 'cloudinary');
-                                                        $userPhotoUrl = $userPhotoIsCloudinary ? auth()->user()->photo : asset('storage/' . auth()->user()->photo);
+                                                        $userPhotoIsCloudinary = str_contains(
+                                                            auth()->user()->photo,
+                                                            'cloudinary',
+                                                        );
+                                                        $userPhotoUrl = $userPhotoIsCloudinary
+                                                            ? auth()->user()->photo
+                                                            : asset('storage/' . auth()->user()->photo);
                                                     @endphp
                                                     <img src="{{ $userPhotoUrl }}" alt="{{ auth()->user()->nom }}">
                                                 @else
@@ -286,7 +296,8 @@
                                                         <span class="rating-selected" id="ratingText"></span>
                                                     </label>
                                                     <div class="star-rating" id="starRating">
-                                                        <input type="radio" id="star5" name="note" value="5" required>
+                                                        <input type="radio" id="star5" name="note" value="5"
+                                                            required>
                                                         <label for="star5" title="Excellent" data-value="5">
                                                             <i class="fas fa-star"></i>
                                                         </label>
@@ -314,15 +325,8 @@
                                                 </div>
 
                                                 {{-- Zone de texte --}}
-                                                <textarea
-                                                    name="commentaire"
-                                                    class="comment-form__input"
-                                                    rows="4"
-                                                    placeholder="Partagez votre avis sur ce contenu culturel..."
-                                                    required
-                                                    minlength="3"
-                                                    maxlength="1000"
-                                                >{{ old('commentaire') }}</textarea>
+                                                <textarea name="commentaire" class="comment-form__input" rows="4"
+                                                    placeholder="Partagez votre avis sur ce contenu culturel..." required minlength="3" maxlength="1000">{{ old('commentaire') }}</textarea>
 
                                                 <div class="comment-form__actions">
                                                     <button type="submit" class="btn btn-success btn-sm">
@@ -340,7 +344,8 @@
                                             <i class="fas fa-info-circle me-3 mt-1"></i>
                                             <div>
                                                 <strong>Vous avez déjà commenté ce contenu.</strong>
-                                                <p class="mb-0 mt-1">Vous pouvez modifier ou supprimer votre commentaire ci-dessous.</p>
+                                                <p class="mb-0 mt-1">Vous pouvez modifier ou supprimer votre commentaire
+                                                    ci-dessous.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -350,48 +355,58 @@
                                 <div class="comment-login-prompt">
                                     <i class="fas fa-lock me-2"></i>
                                     <span>
-                Vous devez être <a href="{{ route('login') }}">connecté</a> pour commenter et noter ce contenu culturel.
-            </span>
+                                        Vous devez être <a href="{{ route('login') }}">connecté</a> pour commenter et noter ce
+                                        contenu culturel.
+                                    </span>
                                 </div>
                             @endauth
 
                             {{-- Liste des commentaires --}}
                             <div class="comments-list">
                                 @forelse($contenu->commentaires as $commentaire)
-                                    <div class="comment-item {{ $commentaire->id_user === auth()->id() ? 'comment-item--own' : '' }}">
+                                    <div
+                                        class="comment-item {{ $commentaire->id_user === auth()->id() ? 'comment-item--own' : '' }}">
                                         <div class="comment-item__avatar">
-                                            @if($commentaire->user->photo)
+                                            @if ($commentaire->user->photo)
                                                 @php
-                                                    $commentUserIsCloudinary = str_contains($commentaire->user->photo, 'cloudinary');
-                                                    $commentUserPhotoUrl = $commentUserIsCloudinary ? $commentaire->user->photo : asset('storage/' . $commentaire->user->photo);
+                                                    $commentUserIsCloudinary = str_contains(
+                                                        $commentaire->user->photo,
+                                                        'cloudinary',
+                                                    );
+                                                    $commentUserPhotoUrl = $commentUserIsCloudinary
+                                                        ? $commentaire->user->photo
+                                                        : asset('storage/' . $commentaire->user->photo);
                                                 @endphp
-                                                <img src="{{ $commentUserPhotoUrl }}" alt="{{ $commentaire->user->nom }}">
+                                                <img src="{{ $commentUserPhotoUrl }}"
+                                                    alt="{{ $commentaire->user->nom }}">
                                             @else
-                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($commentaire->user->prenom .  ' ' . $commentaire->user->nom) }}&background=008751&color=fff&size=128"
-                                                     alt="{{ $commentaire->user->nom }}">
+                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($commentaire->user->prenom . ' ' . $commentaire->user->nom) }}&background=008751&color=fff&size=128"
+                                                    alt="{{ $commentaire->user->nom }}">
                                             @endif
                                         </div>
                                         <div class="comment-item__content">
                                             <div class="comment-item__header">
                                                 <div class="comment-item__author-block">
-                            <span class="comment-item__author">
-                                {{ $commentaire->user->prenom }} {{ $commentaire->user->nom }}
-                                @if($commentaire->id_user === auth()->id())
-                                    <span class="badge bg-success ms-2">Vous</span>
-                                @endif
-                            </span>
+                                                    <span class="comment-item__author">
+                                                        {{ $commentaire->user->prenom }} {{ $commentaire->user->nom }}
+                                                        @if ($commentaire->id_user === auth()->id())
+                                                            <span class="badge bg-success ms-2">Vous</span>
+                                                        @endif
+                                                    </span>
                                                     {{-- Étoiles --}}
                                                     <div class="comment-rating">
-                                                        @for($i = 1; $i <= 5; $i++)
-                                                            <i class="fas fa-star {{ $i <= $commentaire->note ? 'star-filled' : 'star-empty' }}"></i>
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="fas fa-star {{ $i <= $commentaire->note ? 'star-filled' : 'star-empty' }}"></i>
                                                         @endfor
                                                         <span class="rating-text">({{ $commentaire->note }}/5)</span>
                                                     </div>
                                                 </div>
                                                 <span class="comment-item__date">
                                                     <i class="far fa-clock me-1"></i>
-                                                    @if($commentaire->updated_at && $commentaire->updated_at != $commentaire->created_at)
-                                                        Modifié {{ $commentaire->updated_at->locale('fr')->diffForHumans() }}
+                                                    @if ($commentaire->updated_at && $commentaire->updated_at != $commentaire->created_at)
+                                                        Modifié
+                                                        {{ $commentaire->updated_at->locale('fr')->diffForHumans() }}
                                                     @else
                                                         {{ $commentaire->created_at->locale('fr')->diffForHumans() }}
                                                     @endif
@@ -404,21 +419,20 @@
 
                                             {{-- Actions (si c'est le commentaire de l'utilisateur connecté) --}}
                                             @auth
-                                                @if($commentaire->id_user === auth()->id())
+                                                @if ($commentaire->id_user === auth()->id())
                                                     <div class="comment-item__actions">
-                                                        <button
-                                                            class="comment-action-btn"
+                                                        <button class="comment-action-btn"
                                                             onclick="openEditModal({{ $commentaire->id }}, '{{ addslashes($commentaire->commentaire) }}', {{ $commentaire->note }})">
                                                             <i class="fas fa-edit me-1"></i>
                                                             Modifier
                                                         </button>
                                                         <form action="{{ route('commentaires.destroy.user', $commentaire) }}"
-                                                              method="POST"
-                                                              style="display:inline;"
-                                                              onclick="confirmDelete({{ $commentaire->id }})">
+                                                            method="POST" style="display:inline;"
+                                                            onclick="confirmDelete({{ $commentaire->id }})">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="comment-action-btn comment-action-btn--delete">
+                                                            <button type="submit"
+                                                                class="comment-action-btn comment-action-btn--delete">
                                                                 <i class="fas fa-trash me-1"></i>
                                                                 Supprimer
                                                             </button>
@@ -432,7 +446,8 @@
                                     <div class="no-comments">
                                         <i class="far fa-comment-dots"></i>
                                         <p>Aucun commentaire pour le moment.</p>
-                                        <p class="text-muted">Soyez le premier à donner votre avis sur ce contenu culturel !</p>
+                                        <p class="text-muted">Soyez le premier à donner votre avis sur ce contenu culturel
+                                            !</p>
                                     </div>
                                 @endforelse
                             </div>
@@ -447,7 +462,8 @@
                                             <i class="fas fa-edit me-2"></i>
                                             Modifier mon commentaire
                                         </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
                                     </div>
                                     <form id="editCommentForm" method="POST">
                                         @csrf
@@ -455,36 +471,36 @@
                                         <div class="modal-body">
                                             {{-- Étoiles pour modification --}}
                                             <div class="rating-input mb-3">
-                                                <label class="rating-label">Votre note <span class="text-danger">*</span></label>
+                                                <label class="rating-label">Votre note <span
+                                                        class="text-danger">*</span></label>
                                                 <div class="star-rating" id="editStarRating">
-                                                    <input type="radio" id="editStar5" name="note" value="5" required>
-                                                    <label for="editStar5" title="Excellent"><i class="fas fa-star"></i></label>
+                                                    <input type="radio" id="editStar5" name="note" value="5"
+                                                        required>
+                                                    <label for="editStar5" title="Excellent"><i
+                                                            class="fas fa-star"></i></label>
 
                                                     <input type="radio" id="editStar4" name="note" value="4">
-                                                    <label for="editStar4" title="Très bien"><i class="fas fa-star"></i></label>
+                                                    <label for="editStar4" title="Très bien"><i
+                                                            class="fas fa-star"></i></label>
 
                                                     <input type="radio" id="editStar3" name="note" value="3">
-                                                    <label for="editStar3" title="Bien"><i class="fas fa-star"></i></label>
+                                                    <label for="editStar3" title="Bien"><i
+                                                            class="fas fa-star"></i></label>
 
                                                     <input type="radio" id="editStar2" name="note" value="2">
-                                                    <label for="editStar2" title="Moyen"><i class="fas fa-star"></i></label>
+                                                    <label for="editStar2" title="Moyen"><i
+                                                            class="fas fa-star"></i></label>
 
                                                     <input type="radio" id="editStar1" name="note" value="1">
-                                                    <label for="editStar1" title="Médiocre"><i class="fas fa-star"></i></label>
+                                                    <label for="editStar1" title="Médiocre"><i
+                                                            class="fas fa-star"></i></label>
                                                 </div>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label for="editCommentText" class="form-label">Votre commentaire</label>
-                                                <textarea
-                                                    class="form-control"
-                                                    id="editCommentText"
-                                                    name="commentaire"
-                                                    rows="4"
-                                                    required
-                                                    minlength="3"
-                                                    maxlength="1000"
-                                                ></textarea>
+                                                <textarea class="form-control" id="editCommentText" name="commentaire" rows="4" required minlength="3"
+                                                    maxlength="1000"></textarea>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -526,8 +542,8 @@
 @push('styles')
     <style>
         /* ========================================
-           VARIABLES
-        ======================================== */
+               VARIABLES
+            ======================================== */
         :root {
             --benin-green: #008751;
             --benin-green-dark: #006b40;
@@ -543,10 +559,10 @@
             --font-serif: 'Merriweather', 'Georgia', serif;
             --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
 
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
 
             --radius-md: 0.75rem;
             --radius-lg: 1rem;
@@ -559,8 +575,8 @@
         }
 
         /* ========================================
-           HERO SECTION
-        ======================================== */
+               HERO SECTION
+            ======================================== */
         .article-hero {
             position: relative;
             height: 420px;
@@ -585,7 +601,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8));
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
             z-index: 2;
         }
 
@@ -612,7 +628,7 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         .article-hero__title {
@@ -622,7 +638,7 @@
             line-height: 1.2;
             color: #ffffff;
             margin-bottom: 1.5rem;
-            text-shadow: 0 3px 12px rgba(0,0,0,0.5);
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
         }
 
         .article-hero__meta {
@@ -639,7 +655,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
         /* ✅ Badge Langue - Marge confortable + texte centré */
@@ -667,13 +683,13 @@
         }
 
         .hero-meta__separator {
-            color: rgba(255,255,255,0.6);
+            color: rgba(255, 255, 255, 0.6);
             font-weight: bold;
         }
 
         /* ========================================
-           ARTICLE HEADER - Style Medium Pro
-        ======================================== */
+               ARTICLE HEADER - Style Medium Pro
+            ======================================== */
         .article-header {
             background: rgba(255, 255, 255, 0.95);
             padding: 2.5rem 0;
@@ -861,8 +877,8 @@
         }
 
         /* ========================================
-           ARTICLE CONTENT
-        ======================================== */
+               ARTICLE CONTENT
+            ======================================== */
         .article-content {
             padding: 3rem 0;
         }
@@ -1053,10 +1069,21 @@
             color: white;
         }
 
-        .share-btn--facebook { background: #1877f2; }
-        .share-btn--twitter { background: #1da1f2; }
-        .share-btn--whatsapp { background: #25d366; }
-        .share-btn--linkedin { background: #0a66c2; }
+        .share-btn--facebook {
+            background: #1877f2;
+        }
+
+        .share-btn--twitter {
+            background: #1da1f2;
+        }
+
+        .share-btn--whatsapp {
+            background: #25d366;
+        }
+
+        .share-btn--linkedin {
+            background: #0a66c2;
+        }
 
         .author-bio {
             margin: 4rem 0;
@@ -1121,8 +1148,8 @@
         }
 
         /* ========================================
-           COMMENTS SECTION
-        ======================================== */
+               COMMENTS SECTION
+            ======================================== */
         .article-comments {
             margin: 4rem 0;
         }
@@ -1312,8 +1339,8 @@
         }
 
         /* ========================================
-           FOOTER
-        ======================================== */
+               FOOTER
+            ======================================== */
         .article-footer {
             padding: 3rem 0;
             background: var(--color-bg-light);
@@ -1347,8 +1374,8 @@
         }
 
         /* ========================================
-   RATING SYSTEM (ÉTOILES)
-======================================== */
+       RATING SYSTEM (ÉTOILES)
+    ======================================== */
         .rating-badge {
             display: inline-flex;
             align-items: center;
@@ -1410,7 +1437,7 @@
         }
 
         .star-rating label:hover,
-        .star-rating label:hover ~ label {
+        .star-rating label:hover~label {
             color: var(--benin-yellow);
             transform: scale(1.1);
         }
@@ -1419,7 +1446,7 @@
             transform: scale(0.95);
         }
 
-        .star-rating input[type="radio"]:checked ~ label {
+        .star-rating input[type="radio"]:checked~label {
             color: var(--benin-yellow);
             text-shadow: 0 0 8px rgba(252, 209, 22, 0.6);
         }
@@ -1553,8 +1580,8 @@
         }
 
         /* ========================================
-           RESPONSIVE
-        ======================================== */
+               RESPONSIVE
+            ======================================== */
         @media (max-width: 768px) {
             .article-hero {
                 height: 380px;
@@ -1627,7 +1654,6 @@
                 gap: 0.375rem;
             }
         }
-
     </style>
 @endpush
 
@@ -1646,9 +1672,9 @@
             // Sticky header scroll effect
             const header = document.querySelector('.article-header');
             if (header) {
-                window. addEventListener('scroll', function() {
+                window.addEventListener('scroll', function() {
                     if (window.scrollY > 100) {
-                        header.classList. add('scrolled');
+                        header.classList.add('scrolled');
                     } else {
                         header.classList.remove('scrolled');
                     }
@@ -1661,7 +1687,7 @@
             // ========================================
             // Système d'étoiles interactif
             // ========================================
-            const starRating = document. getElementById('starRating');
+            const starRating = document.getElementById('starRating');
             const ratingText = document.getElementById('ratingText');
 
             if (starRating && ratingText) {
@@ -1689,7 +1715,7 @@
             alerts.forEach(alert => {
                 setTimeout(() => {
                     const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert. close();
+                    bsAlert.close();
                 }, 5000);
             });
         });
@@ -1712,7 +1738,7 @@
             document.getElementById('editStar' + note).checked = true;
 
             // Ouvrir le modal
-            modal. show();
+            modal.show();
         }
     </script>
     <script>
@@ -1721,39 +1747,39 @@
             // SWEETALERT2 - Messages de succès/erreur
             // ========================================
 
-            @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Succès ! ',
-                text: '{{ session('success') }}',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#008751', // Vert Bénin
-                timer: 5000,
-                timerProgressBar: true,
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-            });
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Succès ! ',
+                    text: '{{ session('success') }}',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#008751', // Vert Bénin
+                    timer: 5000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                });
             @endif
 
-            @if($errors->any())
-            Swal.fire({
-                icon: 'error',
-                title: 'Erreur',
-                html: '<ul style="text-align:left; padding-left:20px;">' +
-                    @foreach($errors->all() as $error)
-                        '<li>{{ $error }}</li>' +
-                    @endforeach
-                        '</ul>',
-                confirmButtonText: 'Compris',
-                confirmButtonColor: '#e53e3e',
-            });
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur',
+                    html: '<ul style="text-align:left; padding-left:20px;">' +
+                        @foreach ($errors->all() as $error)
+                            '<li>{{ $error }}</li>' +
+                        @endforeach
+                    '</ul>',
+                    confirmButtonText: 'Compris',
+                    confirmButtonColor: '#e53e3e',
+                });
             @endif
 
             // ========================================
             // Système d'étoiles interactif
             // ========================================
-            const starRating = document. getElementById('starRating');
+            const starRating = document.getElementById('starRating');
             const ratingText = document.getElementById('ratingText');
 
             if (starRating && ratingText) {
@@ -1765,7 +1791,7 @@
                     5: '⭐⭐⭐⭐⭐ Excellent'
                 };
 
-                starRating. querySelectorAll('input[type="radio"]').forEach(input => {
+                starRating.querySelectorAll('input[type="radio"]').forEach(input => {
                     input.addEventListener('change', function() {
                         const value = this.value;
                         ratingText.textContent = '- ' + labels[value];
@@ -1790,11 +1816,11 @@
             // ========================================
             const header = document.querySelector('.article-header');
             if (header) {
-                window. addEventListener('scroll', function() {
+                window.addEventListener('scroll', function() {
                     if (window.scrollY > 100) {
-                        header. classList.add('scrolled');
+                        header.classList.add('scrolled');
                     } else {
-                        header. classList.remove('scrolled');
+                        header.classList.remove('scrolled');
                     }
                 });
             }
