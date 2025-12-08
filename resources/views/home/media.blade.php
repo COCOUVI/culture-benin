@@ -20,7 +20,7 @@
                 <div class="col-lg-4 text-lg-end">
                     <div class="hero-stats">
                         <div class="stat-item">
-                            <span class="stat-number">{{ $stats['total'] ?? 0 }}</span>
+                            <span class="stat-number">{{ $stats['total'] ??  0 }}</span>
                             <span class="stat-label">Médias</span>
                         </div>
                         <div class="stat-item">
@@ -54,14 +54,14 @@
                 <div class="col-md-8">
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{{ route('media.all') }}"
-                           class="btn btn-outline-primary {{ !request()->has('type') ? 'active' : '' }}">
+                           class="btn btn-outline-primary {{ ! request()->has('type') ?  'active' : '' }}">
                             <i class="fas fa-layer-group me-1"></i>
                             Tous les médias
                         </a>
                         @foreach($typesMedia as $type)
                             <a href="{{ route('media.all', ['type' => $type->id]) }}"
-                               class="btn btn-outline-primary {{ request('type') == $type->id ? 'active' : '' }}">
-                                <i class="{{ $type->icon ?? 'fas fa-file' }} me-1"></i>
+                               class="btn btn-outline-primary {{ request('type') == $type->id ?  'active' : '' }}">
+                                <i class="{{ $type->icon ??  'fas fa-file' }} me-1"></i>
                                 {{ $type->nom }}
                             </a>
                         @endforeach
@@ -93,53 +93,96 @@
             @else
                 <div class="row g-4">
                     @foreach($medias as $media)
+                        @php
+                            // ✅ Détection Cloudinary
+                            $isCloudinary = str_contains($media->chemin, 'cloudinary');
+                            $mediaUrl = $isCloudinary ? $media->chemin : asset('storage/' . $media->chemin);
+
+                            // Type
+                            if ($isCloudinary) {
+                                preg_match('/\/(image|video|raw)\/upload\//', $media->chemin, $matches);
+                                $cloudinaryType = $matches[1] ?? 'raw';
+                                $extension = strtolower($media->format ??  pathinfo($media->chemin, PATHINFO_EXTENSION));
+                            } else {
+                                $extension = strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
+                            }
+                        @endphp
+
                         <div class="col-xl-3 col-lg-4 col-md-6">
                             <div class="media-grid-card card h-100 border-0 shadow-sm">
                                 <!-- Media Header -->
                                 <div class="media-card-header position-relative">
                                     @if($media->isImage())
+                                        {{-- ✅ Image --}}
                                         <div class="media-thumbnail">
-                                            <img src="{{ asset('storage/' . $media->chemin) }}"
+                                            <img src="{{ $mediaUrl }}"
                                                  alt="{{ $media->description ?: 'Image culturelle' }}"
                                                  class="img-fluid w-100"
                                                  loading="lazy">
                                             <span class="media-type-badge badge bg-success">
                                                 <i class="fas fa-image"></i> Image
                                             </span>
+                                            @if($isCloudinary)
+                                                <span class="cloudinary-badge">
+                                                    <i class="fas fa-cloud"></i>
+                                                </span>
+                                            @endif
                                         </div>
+
                                     @elseif($media->isVideo())
+                                        {{-- ✅ Vidéo --}}
                                         <div class="media-thumbnail video-thumbnail">
                                             <div class="video-player-wrapper">
                                                 <video class="video-thumbnail-player"
                                                        preload="metadata"
                                                        muted
-                                                       playsinline
-                                                       >
-                                                    <source src="{{ asset('storage/' . $media->chemin) }}" type="video/mp4">
+                                                       playsinline>
+                                                    <source src="{{ $mediaUrl }}" type="video/mp4">
                                                 </video>
                                                 <div class="video-overlay">
                                                     <button class="play-btn"
-                                                            onclick="openVideoModal('{{ asset('storage/' . $media->chemin) }}', '{{ $media->contenu->titre ?? 'Vidéo culturelle' }}')">
+                                                            onclick="openVideoModal('{{ $mediaUrl }}', '{{ addslashes($media->contenu->titre ??  'Vidéo culturelle') }}')">
                                                         <i class="fas fa-play-circle"></i>
                                                     </button>
-                                                    <p class="video-duration" id="duration-{{ $media->id }}">--:--</p>
+                                                    @if($media->duree)
+                                                        <p class="video-duration">{{ gmdate('i:s', $media->duree) }}</p>
+                                                    @else
+                                                        <p class="video-duration" id="duration-{{ $media->id }}">--:--</p>
+                                                    @endif
                                                 </div>
                                                 <span class="media-type-badge badge bg-primary">
                                                     <i class="fas fa-video"></i> Vidéo
                                                 </span>
+                                                @if($isCloudinary)
+                                                    <span class="cloudinary-badge">
+                                                        <i class="fas fa-cloud"></i>
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
+
                                     @elseif($media->isAudio())
+                                        {{-- ✅ Audio --}}
                                         <div class="media-thumbnail audio-thumbnail">
                                             <div class="audio-placeholder">
                                                 <i class="fas fa-music fa-3x text-warning"></i>
                                                 <p class="mt-2 mb-0 fw-bold">Fichier Audio</p>
+                                                @if($media->duree)
+                                                    <small class="text-dark">{{ gmdate('i:s', $media->duree) }}</small>
+                                                @endif
                                             </div>
                                             <span class="media-type-badge badge bg-warning text-dark">
                                                 <i class="fas fa-headphones"></i> Audio
                                             </span>
+                                            @if($isCloudinary)
+                                                <span class="cloudinary-badge">
+                                                    <i class="fas fa-cloud"></i>
+                                                </span>
+                                            @endif
                                         </div>
+
                                     @else
+                                        {{-- ✅ Autre fichier --}}
                                         <div class="media-thumbnail">
                                             <div class="file-placeholder">
                                                 <i class="fas fa-file fa-3x text-secondary"></i>
@@ -148,26 +191,38 @@
                                             <span class="media-type-badge badge bg-secondary">
                                                 <i class="fas fa-file-alt"></i> Document
                                             </span>
+                                            @if($isCloudinary)
+                                                <span class="cloudinary-badge">
+                                                    <i class="fas fa-cloud"></i>
+                                                </span>
+                                            @endif
                                         </div>
                                     @endif
 
                                     <!-- Quick Actions -->
                                     <div class="media-actions">
-                                        <button class="btn-action btn-action-sm" title="Partager">
+                                        <button class="btn-action btn-action-sm"
+                                                title="Partager"
+                                                data-media-url="{{ $mediaUrl }}"
+                                                data-media-title="{{ $media->contenu->titre ?? 'Média culturel' }}">
                                             <i class="fas fa-share-alt"></i>
                                         </button>
-                                        <button class="btn-action btn-action-sm" title="Télécharger">
+                                        <a href="{{ $mediaUrl }}"
+                                           download
+                                           target="_blank"
+                                           class="btn-action btn-action-sm"
+                                           title="Télécharger">
                                             <i class="fas fa-download"></i>
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
 
                                 <!-- Media Body -->
                                 <div class="card-body">
                                     <h6 class="card-title fw-bold mb-2">
-                                        <a href="{{ route('contenu.detail', $media->contenu->id ?? '#') }}"
+                                        <a href="{{ route('contenu.detail', $media->contenu->id ??  '#') }}"
                                            class="text-decoration-none text-dark">
-                                            {{ $media->contenu->titre ?? 'Média sans titre' }}
+                                            {{ $media->contenu->titre ??  'Média sans titre' }}
                                         </a>
                                     </h6>
 
@@ -201,6 +256,14 @@
                                             <i class="fas fa-calendar me-2 text-primary"></i>
                                             <span class="text-muted">{{ $media->created_at->format('d/m/Y') }}</span>
                                         </div>
+
+                                        {{-- ✅ Métadonnées supplémentaires --}}
+                                        @if($media->taille)
+                                            <div class="d-flex align-items-center mt-2">
+                                                <i class="fas fa-hdd me-2 text-primary"></i>
+                                                <span class="text-muted">{{ number_format($media->taille / 1048576, 2) }} Mo</span>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -208,17 +271,21 @@
                                 <div class="card-footer bg-transparent border-top-0 pt-0">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">
-                                            <i class="fas fa-file-signature me-1"></i>
-                                            {{ strtoupper($media->getExtension()) }}
+                                            @if($isCloudinary)
+                                                <i class="fas fa-cloud text-success me-1"></i>
+                                            @else
+                                                <i class="fas fa-file-signature me-1"></i>
+                                            @endif
+                                            {{ strtoupper($extension) }}
                                         </small>
                                         <div class="btn-group">
-                                            <a href="{{ asset('storage/' . $media->chemin) }}"
+                                            <a href="{{ $mediaUrl }}"
                                                target="_blank"
                                                class="btn btn-sm btn-outline-primary mx-1"
                                                title="Voir en grand">
                                                 <i class="fas fa-expand"></i>
                                             </a>
-                                            <a href="{{ route('media.detail', $media->id ?? '#') }}"
+                                            <a href="{{ route('media.detail', $media->id) }}"
                                                class="btn btn-sm btn-primary"
                                                title="Voir le contenu">
                                                 <i class="fas fa-eye"></i>
@@ -510,6 +577,24 @@
                 font-size: 0.75rem;
             }
         }
+        /* ✅ Badge Cloudinary */
+        .cloudinary-badge {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        . cloudinary-badge i {
+            font-size: 0.65rem;
+        }
     </style>
 @endpush
 
@@ -517,55 +602,54 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Gérer les vidéos
-            document.querySelectorAll('.video-thumbnail-player').forEach(video => {
-                // Calculer et afficher la durée de la vidéo
-                video.addEventListener('loadedmetadata', function() {
-                    const duration = Math.floor(video.duration);
-                    const minutes = Math.floor(duration / 60);
-                    const seconds = duration % 60;
-                    const videoId = video.closest('.video-player-wrapper').querySelector('.video-duration').id.replace('duration-', '');
-                    document.querySelector('#duration-' + videoId).textContent =
-                        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-                });
+            document.querySelectorAll('. video-thumbnail-player').forEach(video => {
+                const durationEl = video.closest('.video-player-wrapper').querySelector('.video-duration');
+
+                // Calculer la durée seulement si pas déjà affichée
+                if (durationEl && durationEl.textContent === '--:--') {
+                    video.addEventListener('loadedmetadata', function() {
+                        const duration = Math.floor(video.duration);
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = duration % 60;
+                        durationEl.textContent =
+                            minutes.toString().padStart(2, '0') + ':' +
+                            seconds.toString().padStart(2, '0');
+                    });
+                }
 
                 // Lecture automatique au survol
-                const thumbnailWrapper = video.closest('.media-thumbnail');
-                thumbnailWrapper.addEventListener('mouseenter', function() {
-                    video.play();
-                });
-                thumbnailWrapper.addEventListener('mouseleave', function() {
-                    video.pause();
-                    video.currentTime = 0;
-                });
+                const thumbnailWrapper = video.closest('. media-thumbnail');
+                if (thumbnailWrapper) {
+                    thumbnailWrapper.addEventListener('mouseenter', function() {
+                        video.play(). catch(e => console.log('Autoplay prevented'));
+                    });
+                    thumbnailWrapper.addEventListener('mouseleave', function() {
+                        video.pause();
+                        video. currentTime = 0;
+                    });
+                }
             });
 
-            // Boutons d'action
-            document.querySelectorAll('.media-actions .btn-action-sm').forEach(btn => {
+            // Boutons d'action Partager
+            document.querySelectorAll('.media-actions .btn-action-sm[title="Partager"]').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const action = this.title;
-                    const mediaCard = this.closest('.media-grid-card');
-                    const mediaTitle = mediaCard.querySelector('.card-title').textContent;
+                    const mediaUrl = this.dataset.mediaUrl;
+                    const mediaTitle = this.dataset.mediaTitle;
 
-                    if (action === 'Partager') {
-                        // Logique de partage
-                        if (navigator.share) {
-                            navigator.share({
-                                title: mediaTitle,
-                                text: 'Découvrez ce média culturel du Bénin',
-                                url: window.location.href
-                            });
-                        } else {
-                            alert('Fonction de partage non disponible');
-                        }
-                    } else if (action === 'Télécharger') {
-                        // Logique de téléchargement
-                        const downloadLink = mediaCard.querySelector('a[href*="storage"]');
-                        if (downloadLink) {
-                            window.open(downloadLink.href, '_blank');
-                        }
+                    if (navigator.share) {
+                        navigator.share({
+                            title: mediaTitle,
+                            text: 'Découvrez ce média culturel du Bénin',
+                            url: window.location.href
+                        }). catch(err => console.log('Share cancelled'));
+                    } else {
+                        // Copier le lien
+                        navigator.clipboard.writeText(window. location.href). then(() => {
+                            showToast('Lien copié dans le presse-papier');
+                        });
                     }
                 });
             });
@@ -575,20 +659,20 @@
         function openVideoModal(videoUrl, videoTitle) {
             const modalHtml = `
                 <div class="modal fade video-modal" id="videoModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header bg-dark text-white">
                                 <h5 class="modal-title">${videoTitle}</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
-                                <video controls controlsList="nodownload" style="width:100%;">
+                            <div class="modal-body p-0">
+                                <video controls controlsList="nodownload" style="width:100%; max-height:70vh;" autoplay>
                                     <source src="${videoUrl}" type="video/mp4">
                                     Votre navigateur ne supporte pas la lecture de vidéos.
                                 </video>
                             </div>
-                            <div class="modal-footer">
-                                <a href="${videoUrl}" download class="btn btn-outline-light">
+                            <div class="modal-footer bg-dark">
+                                <a href="${videoUrl}" download target="_blank" class="btn btn-outline-light">
                                     <i class="fas fa-download me-2"></i>
                                     Télécharger
                                 </a>
@@ -604,11 +688,24 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             const videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
 
-            document.getElementById('videoModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('videoModal').addEventListener('hidden. bs.modal', function() {
                 this.remove();
             });
 
             videoModal.show();
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.innerHTML = `
+                <div style="position: fixed; bottom: 20px; right: 20px; background: #008751; color: white; padding: 12px 20px; border-radius: 6px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
     </script>
 @endpush

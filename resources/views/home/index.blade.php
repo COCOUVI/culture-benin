@@ -245,19 +245,28 @@
                                     @foreach($chunk as $contenu)
                                         <div class="col-md-4">
                                             <article class="content-card card h-100">
+                                                {{-- Ligne ~220 environ --}}
                                                 <div class="card-img-wrapper">
                                                     @php
-                                                        // safe access: first media path or placeholder
-                                                        $media = optional($contenu->media->first())->chemin;
-                                                        $imgSrc = $media ? asset("storage/{$media}") : "https://picsum.photos/400/250?random={$contenu->id}";
+                                                        // ✅ Détection Cloudinary
+                                                        $mediaPath = optional($contenu->media->first())->chemin;
+
+                                                        if ($mediaPath) {
+                                                            $isCloudinary = str_contains($mediaPath, 'cloudinary');
+                                                            $imgSrc = $isCloudinary ?  $mediaPath : asset("storage/{$mediaPath}");
+                                                        } else {
+                                                            $imgSrc = "https://picsum.photos/400/250?random={$contenu->id}";
+                                                        }
                                                     @endphp
+
                                                     <img src="{{ $imgSrc }}"
                                                          class="card-img-top"
-                                                         alt="{{ $contenu->titre ?? 'Contenu culturel' }}">
+                                                         alt="{{ $contenu->titre ?? 'Contenu culturel' }}"
+                                                         loading="lazy">
 
                                                     <span class="badge-category">
-                                                        {{ optional($contenu->type_contenu)->nom ?? 'Contenu' }}
-                                                    </span>
+        {{ optional($contenu->type_contenu)->nom ??  'Contenu' }}
+    </span>
                                                 </div>
 
                                                 <div class="card-body">
@@ -345,6 +354,8 @@
         </div>
     </section>
 
+    {{-- Remplacez seulement la section Media (ligne ~370 à ~500) --}}
+
     <!-- Media Section -->
     <section id="medias" class="py-5">
         <div class="container">
@@ -352,61 +363,107 @@
             <p class="text-center text-muted mb-5">Découvrez notre collection d'images, vidéos et audios documentant la culture béninoise</p>
 
             <div class="row g-4">
-
                 @forelse($medias as $media)
+                    @php
+                        // ✅ Détecter si c'est Cloudinary
+                        $isCloudinary = str_contains($media->chemin, 'cloudinary');
+
+                        // ✅ URL du média (Cloudinary ou local)
+                        $mediaUrl = $isCloudinary ?  $media->chemin : asset('storage/' . $media->chemin);
+
+                        // ✅ Détecter le type
+                        if ($isCloudinary) {
+                            // Cloudinary encode le type dans l'URL
+                            preg_match('/\/(image|video|raw)\/upload\//', $media->chemin, $matches);
+                            $cloudinaryType = $matches[1] ?? 'raw';
+
+                            $isImage = $cloudinaryType === 'image';
+                            $isVideo = $cloudinaryType === 'video';
+
+                            // Audio est stocké comme 'video' sur Cloudinary
+                            $extension = strtolower($media->format ??  pathinfo($media->chemin, PATHINFO_EXTENSION));
+                            $isAudio = in_array($extension, ['mp3','wav','ogg','m4a','aac','flac']);
+
+                            if ($cloudinaryType === 'video' && ! $isAudio) {
+                                $isVideo = true;
+                            }
+                        } else {
+                            // Local : détection par extension
+                            $extension = strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
+                            $isImage = in_array($extension, ['jpg','jpeg','png','gif','webp','svg']);
+                            $isVideo = in_array($extension, ['mp4','mov','avi','mkv','webm']);
+                            $isAudio = in_array($extension, ['mp3','wav','ogg','m4a','aac','flac']);
+                        }
+                    @endphp
+
                     <div class="col-md-4 col-lg-3">
                         <article class="media-card card h-100">
                             <div class="media-card-header">
-                                @if($media->isImage())
+                                @if($isImage)
+                                    {{-- ✅ Image --}}
                                     <div class="media-thumbnail">
-                                        <img src="{{ asset('storage/' . $media->chemin) }}"
+                                        <img src="{{ $mediaUrl }}"
                                              alt="{{ $media->description ?: 'Image culturelle' }}"
-                                             class="img-fluid">
+                                             class="img-fluid"
+                                             loading="lazy">
                                         <span class="media-type-badge badge bg-success">
-                                            <i class="fas fa-image"></i> Image
-                                        </span>
+                                        <i class="fas fa-image"></i> Image
+                                    </span>
                                     </div>
-                                @elseif($media->isVideo())
+
+                                @elseif($isVideo)
+                                    {{-- ✅ Vidéo --}}
                                     <div class="media-thumbnail video-thumbnail">
                                         <div class="video-player-wrapper">
                                             <video class="video-thumbnail-player"
                                                    preload="metadata"
                                                    muted
-                                                   playsinline
-                                                   ">
-                                                <source src="{{ asset('storage/' . $media->chemin) }}" type="video/mp4">
+                                                   playsinline>
+                                                <source src="{{ $mediaUrl }}" type="video/mp4">
                                                 Votre navigateur ne supporte pas la lecture de vidéos.
                                             </video>
                                             <div class="video-overlay">
-                                                <button class="play-btn" onclick="openVideoModal('{{ asset('storage/' . $media->chemin) }}', '{{ $media->contenu->titre ?? 'Vidéo culturelle' }}')">
+                                                <button class="play-btn"
+                                                        onclick="openVideoModal('{{ $mediaUrl }}', '{{ addslashes($media->contenu->titre ??  'Vidéo culturelle') }}')">
                                                     <i class="fas fa-play-circle"></i>
                                                 </button>
-                                                <p class="video-duration" id="duration-{{ $media->id }}">--:--</p>
+                                                @if($media->duree)
+                                                    <p class="video-duration">{{ gmdate('i:s', $media->duree) }}</p>
+                                                @else
+                                                    <p class="video-duration" id="duration-{{ $media->id }}">--:--</p>
+                                                @endif
                                             </div>
                                             <span class="media-type-badge badge bg-primary">
-                                                <i class="fas fa-video"></i> Vidéo
-                                            </span>
+                                            <i class="fas fa-video"></i> Vidéo
+                                        </span>
                                         </div>
                                     </div>
-                                @elseif($media->isAudio())
+
+                                @elseif($isAudio)
+                                    {{-- ✅ Audio --}}
                                     <div class="media-thumbnail audio-thumbnail">
                                         <div class="audio-placeholder">
                                             <i class="fas fa-music"></i>
                                             <p>Audio</p>
+                                            @if($media->duree)
+                                                <small class="text-white">{{ gmdate('i:s', $media->duree) }}</small>
+                                            @endif
                                         </div>
                                         <span class="media-type-badge badge bg-warning text-dark">
-                                            <i class="fas fa-headphones"></i> Audio
-                                        </span>
+                                        <i class="fas fa-headphones"></i> Audio
+                                    </span>
                                     </div>
+
                                 @else
+                                    {{-- ✅ Autre fichier --}}
                                     <div class="media-thumbnail">
                                         <div class="file-placeholder">
                                             <i class="fas fa-file"></i>
                                             <p>Fichier</p>
                                         </div>
                                         <span class="media-type-badge badge bg-secondary">
-                                            <i class="fas fa-file-alt"></i> Document
-                                        </span>
+                                        <i class="fas fa-file-alt"></i> Document
+                                    </span>
                                     </div>
                                 @endif
                             </div>
@@ -431,20 +488,40 @@
                                         <i class="fas fa-map-marker-alt"></i>
                                         {{ optional($media->contenu->region)->nom_region ?? 'Non spécifié' }}
                                     </div>
-                                    <div>
+                                    <div class="mb-1">
                                         <i class="fas fa-calendar"></i>
                                         {{ $media->created_at->format('d/m/Y') }}
                                     </div>
+
+                                    {{-- ✅ Métadonnées Cloudinary --}}
+                                    @if($media->taille)
+                                        <div class="mb-1">
+                                            <i class="fas fa-hdd"></i>
+                                            {{ number_format($media->taille / 1048576, 2) }} MB
+                                        </div>
+                                    @endif
+
+                                    @if($media->largeur && $media->hauteur && ($isImage || $isVideo))
+                                        <div>
+                                            <i class="fas fa-expand-arrows-alt"></i>
+                                            {{ $media->largeur }}x{{ $media->hauteur }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
                             <div class="card-footer bg-transparent border-top-0">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">
-                                        <i class="fas fa-file-signature"></i>
-                                        {{ strtoupper($media->getExtension()) }}
+                                        @if($isCloudinary)
+                                            <i class="fas fa-cloud text-success"></i>
+                                            {{ strtoupper($media->format ?? pathinfo($media->chemin, PATHINFO_EXTENSION)) }}
+                                        @else
+                                            <i class="fas fa-file-signature"></i>
+                                            {{ strtoupper($media->getExtension()) }}
+                                        @endif
                                     </small>
-                                    <a href="{{ route('contenu.detail', $media->contenu->id ?? '#') }}"
+                                    <a href="{{ route('media.detail', $media->id ??  '#') }}"
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-eye"></i> Voir
                                     </a>
@@ -1138,7 +1215,23 @@
                 display: block;
             }
         }
+        /* Ajoutez dans  */
+        .cloudinary-badge {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            z-index: 3;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
     </style>
+
+
 @endpush
 
 @push('scripts')
@@ -1242,27 +1335,33 @@
                 }
             }
 
-            // Gérer les vidéos
+            // Gérer les vidéos (ligne ~660 environ)
             document.querySelectorAll('.video-thumbnail-player').forEach(video => {
-                // Calculer et afficher la durée de la vidéo
-                video.addEventListener('loadedmetadata', function() {
-                    const duration = Math.floor(video.duration);
-                    const minutes = Math.floor(duration / 60);
-                    const seconds = duration % 60;
-                    const videoId = video.closest('.video-player-wrapper').querySelector('.video-duration').id.replace('duration-', '');
-                    document.querySelector('#duration-' + videoId).textContent =
-                        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-                });
+                // Calculer la durée seulement si pas déjà affichée (pas de $media->duree)
+                const durationEl = video.closest('.video-player-wrapper').querySelector('.video-duration');
+
+                if (durationEl && durationEl.textContent === '--:--') {
+                    video.addEventListener('loadedmetadata', function() {
+                        const duration = Math. floor(video.duration);
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = duration % 60;
+                        durationEl.textContent =
+                            minutes.toString().padStart(2, '0') + ':' +
+                            seconds.toString().padStart(2, '0');
+                    });
+                }
 
                 // Lecture automatique au survol
                 const thumbnailWrapper = video.closest('.media-thumbnail');
-                thumbnailWrapper.addEventListener('mouseenter', function() {
-                    video.play();
-                });
-                thumbnailWrapper.addEventListener('mouseleave', function() {
-                    video.pause();
-                    video.currentTime = 0;
-                });
+                if (thumbnailWrapper) {
+                    thumbnailWrapper.addEventListener('mouseenter', function() {
+                        video. play(). catch(e => console.log('Autoplay prevented:', e));
+                    });
+                    thumbnailWrapper.addEventListener('mouseleave', function() {
+                        video.pause();
+                        video.currentTime = 0;
+                    });
+                }
             });
         });
 

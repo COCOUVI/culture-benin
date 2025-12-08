@@ -1,9 +1,25 @@
+
 @extends('layouts.app1')
 
 @section('title', $media->contenu->titre ?? 'Détails du média - Culture Bénin')
 
 @section('content')
-    <!-- Hero Section - Style Medium -->
+    @php
+        // ✅ Détection Cloudinary au début
+        $isCloudinary = str_contains($media->chemin, 'cloudinary');
+        $mediaUrl = $isCloudinary ?  $media->chemin : asset('storage/' . $media->chemin);
+
+        // Type de média
+        if ($isCloudinary) {
+            preg_match('/\/(image|video|raw)\/upload\//', $media->chemin, $matches);
+            $cloudinaryType = $matches[1] ?? 'raw';
+            $extension = strtolower($media->format ??  pathinfo($media->chemin, PATHINFO_EXTENSION));
+        } else {
+            $extension = strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
+        }
+    @endphp
+
+        <!-- Hero Section - Style Medium -->
     <section class="media-detail-hero py-5 mb-5" style="background: linear-gradient(135deg, #008751 0%, #00532b 100%);">
         <div class="container">
             <nav aria-label="breadcrumb" class="mb-4">
@@ -14,12 +30,12 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('medias.index') }}" class="text-white opacity-75 hover-opacity-100 transition">
+                        <a href="{{ route('media.all') }}" class="text-white opacity-75 hover-opacity-100 transition">
                             <i class="fas fa-photo-video me-1"></i> Galerie
                         </a>
                     </li>
                     <li class="breadcrumb-item active text-white" aria-current="page">
-                        {{ \Illuminate\Support\Str::limit($media->contenu->titre ?? 'Détails', 40) }}
+                        {{ \Illuminate\Support\Str::limit($media->contenu->titre ??   'Détails', 40) }}
                     </li>
                 </ol>
             </nav>
@@ -38,15 +54,23 @@
                             </span>
                         @endif
 
+                        {{-- ✅ Badge Cloudinary --}}
+                        @if($isCloudinary)
+                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(16, 185, 129, 0.9); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-cloud me-1"></i>
+                                CDN Cloudinary
+                            </span>
+                        @endif
+
                         @if($media->contenu && $media->contenu->langue)
-                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0. 3);">
                                 <i class="fas fa-language me-1"></i>
                                 {{ $media->contenu->langue->nom_langue }}
                             </span>
                         @endif
 
                         @if($media->contenu && $media->contenu->region)
-                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0. 3);">
                                 <i class="fas fa-map-marker-alt me-1"></i>
                                 {{ $media->contenu->region->nom_region }}
                             </span>
@@ -61,8 +85,10 @@
                             <i class="fas fa-share-alt me-1"></i>
                             <span>Partager</span>
                         </button>
-                        <a href="{{ asset('storage/' . $media->chemin) }}"
+                        {{-- ✅ Téléchargement adapté --}}
+                        <a href="{{ $mediaUrl }}"
                            download
+                           target="_blank"
                            class="btn btn-sm px-3 py-2"
                            style="background: #f8f9fa; color: #008751; border: none;">
                             <i class="fas fa-download me-1"></i>
@@ -84,64 +110,79 @@
         </div>
     </section>
 
-    <!-- Main Content - Style Medium -->
+    <!-- Main Content -->
     <section class="py-4">
         <div class="container">
             <div class="row justify-content-center">
-                <!-- Media Preview - Section principale -->
                 <div class="col-xl-8 col-lg-10">
                     <!-- Media Container -->
                     <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; overflow: hidden;">
                         <div class="card-body p-0">
                             @if($media->isImage())
+                                {{-- ✅ Image --}}
                                 <div class="image-preview text-center p-4" style="background: #f8f9fa;">
-                                    <img src="{{ asset('storage/' . $media->chemin) }}"
+                                    <img src="{{ $mediaUrl }}"
                                          alt="{{ $media->description ?: 'Image culturelle' }}"
                                          class="img-fluid rounded"
                                          id="mediaImage"
                                          style="max-height: 70vh; object-fit: contain;"
                                          loading="eager">
                                 </div>
+
                             @elseif($media->isVideo())
+                                {{-- ✅ Vidéo --}}
                                 <div class="video-preview">
                                     <div class="video-player-container bg-dark">
                                         <video controls
                                                controlsList="nodownload"
                                                class="w-100"
                                                style="min-height: 400px;"
-
+                                               preload="metadata"
                                                id="mediaVideo">
-                                            <source src="{{ asset('storage/' . $media->chemin) }}" type="video/mp4">
+                                            <source src="{{ $mediaUrl }}" type="video/mp4">
                                             Votre navigateur ne supporte pas la lecture de vidéos.
                                         </video>
                                     </div>
                                 </div>
+
                             @elseif($media->isAudio())
+                                {{-- ✅ Audio --}}
                                 <div class="audio-preview bg-light p-5 text-center">
                                     <div class="mb-4">
                                         <i class="fas fa-music fa-4x mb-3" style="color: #008751;"></i>
                                         <h4 class="mb-2">Écouter l'audio</h4>
-                                        <p class="text-muted mb-0">Fichier audio culturel</p>
+                                        <p class="text-muted mb-0">
+                                            {{ $media->contenu->titre ??  'Fichier audio culturel' }}
+                                        </p>
+                                        @if($media->duree)
+                                            <p class="text-muted small mt-2">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Durée: {{ gmdate('i:s', $media->duree) }}
+                                            </p>
+                                        @endif
                                     </div>
 
                                     <audio controls
                                            controlsList="nodownload"
                                            class="w-100 mt-4"
                                            id="mediaAudio"
+                                           preload="metadata"
                                            style="max-width: 600px; margin: 0 auto;">
-                                        <source src="{{ asset('storage/' . $media->chemin) }}" type="audio/mpeg">
+                                        <source src="{{ $mediaUrl }}" type="audio/{{ $extension }}">
                                         Votre navigateur ne supporte pas la lecture audio.
                                     </audio>
                                 </div>
+
                             @else
+                                {{-- ✅ Autre fichier --}}
                                 <div class="document-preview bg-light p-5 text-center">
                                     <i class="fas fa-file-alt fa-5x mb-4" style="color: #6c757d;"></i>
                                     <h4 class="mb-3">Document à consulter</h4>
                                     <p class="text-muted mb-4">
                                         <i class="fas fa-file-signature me-1"></i>
-                                        Format: {{ strtoupper($media->getExtension()) }}
+                                        Format: {{ strtoupper($extension) }}
                                     </p>
-                                    <a href="{{ asset('storage/' . $media->chemin) }}"
+                                    <a href="{{ $mediaUrl }}"
                                        target="_blank"
                                        class="btn px-4 py-2"
                                        style="background: #008751; color: white;">
@@ -156,7 +197,7 @@
                         @if($media->isImage())
                             <div class="card-footer bg-white border-top py-3">
                                 <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm px-3" onclick="zoomImage(1.2)">
+                                    <button class="btn btn-outline-secondary btn-sm px-3" onclick="zoomImage(1. 2)">
                                         <i class="fas fa-search-plus me-1"></i> Zoom
                                     </button>
                                     <button class="btn btn-outline-secondary btn-sm px-3" onclick="zoomImage(1)">
@@ -170,7 +211,7 @@
                         @endif
                     </div>
 
-                    <!-- Description Section - Style Medium -->
+                    <!-- Description Section -->
                     @if($media->description || $media->contenu)
                         <div class="mb-5">
                             <h3 class="mb-4 pb-2" style="border-bottom: 2px solid #f0f0f0; font-weight: 600;">
@@ -230,28 +271,58 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <small class="text-muted d-block">Type de fichier</small>
-                                        <span class="fw-medium">{{ $media->type_media->nom ?? 'Non spécifié' }}</span>
+                                        <span class="fw-medium">{{ $media->type_media->nom ??  'Non spécifié' }}</span>
                                     </div>
                                     <div class="mb-3">
                                         <small class="text-muted d-block">Format</small>
-                                        <span class="fw-medium">{{ strtoupper($media->getExtension()) }}</span>
+                                        <span class="fw-medium">{{ strtoupper($extension) }}</span>
                                     </div>
+                                    {{-- ✅ Dimensions (images/vidéos) --}}
+                                    @if($media->largeur && $media->hauteur)
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Dimensions</small>
+                                            <span class="fw-medium">{{ $media->largeur }}x{{ $media->hauteur }}px</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <small class="text-muted d-block">Date d'ajout</small>
                                         <span>{{ $media->created_at->format('d/m/Y') }}</span>
                                     </div>
+                                    {{-- ✅ Taille depuis DB ou calcul --}}
                                     <div class="mb-3">
                                         <small class="text-muted d-block">Taille du fichier</small>
-                                        <span id="fileSize">Calcul...</span>
+                                        @if($media->taille)
+                                            <span>{{ number_format($media->taille / 1048576, 2) }} Mo</span>
+                                        @else
+                                            <span id="fileSize">Calcul... </span>
+                                        @endif
+                                    </div>
+                                    {{-- ✅ Durée (vidéo/audio) --}}
+                                    @if($media->duree)
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Durée</small>
+                                            <span class="fw-medium">{{ gmdate('i:s', $media->duree) }}</span>
+                                        </div>
+                                    @endif
+                                    {{-- ✅ Source --}}
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Hébergement</small>
+                                        <span class="fw-medium">
+                                            @if($isCloudinary)
+                                                <i class="fas fa-cloud text-success me-1"></i> Cloudinary CDN
+                                            @else
+                                                <i class="fas fa-hdd text-primary me-1"></i> Serveur local
+                                            @endif
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Related Media - Style Cards -->
+                    <!-- Related Media -->
                     @if($media->contenu && $media->contenu->media->count() > 1)
                         <div class="mb-5">
                             <h3 class="mb-4 pb-2" style="border-bottom: 2px solid #f0f0f0; font-weight: 600;">
@@ -259,34 +330,32 @@
                             </h3>
                             <div class="row g-4">
                                 @foreach($media->contenu->media->where('id', '!=', $media->id)->take(3) as $relatedMedia)
+                                    @php
+                                        $relatedIsCloudinary = str_contains($relatedMedia->chemin, 'cloudinary');
+                                        $relatedUrl = $relatedIsCloudinary ? $relatedMedia->chemin : asset('storage/' . $relatedMedia->chemin);
+                                    @endphp
                                     <div class="col-md-4">
                                         <a href="{{ route('media.detail', $relatedMedia->id) }}"
                                            class="text-decoration-none text-dark">
                                             <div class="card border-0 shadow-sm h-100 hover-shadow transition">
                                                 <div class="card-body p-0" style="border-radius: 8px; overflow: hidden;">
                                                     @if($relatedMedia->isImage())
-                                                        <img src="{{ asset('storage/' . $relatedMedia->chemin) }}"
+                                                        <img src="{{ $relatedUrl }}"
                                                              alt="{{ $relatedMedia->description }}"
                                                              class="w-100"
-                                                             style="height: 180px; object-fit: cover;">
+                                                             style="height: 180px; object-fit: cover;"
+                                                             loading="lazy">
                                                     @elseif($relatedMedia->isVideo())
-                                                        <div class="position-relative video-card-thumb" style="height: 180px; border-radius: 8px; overflow: hidden;">
+                                                        <div class="position-relative video-card-thumb" style="height: 180px;">
                                                             <video class="w-100 h-100"
                                                                    preload="metadata"
                                                                    muted
                                                                    playsinline
                                                                    style="object-fit: cover; pointer-events: none;">
-                                                                <source src="{{ asset('storage/' . $relatedMedia->chemin) }}" type="video/mp4">
+                                                                <source src="{{ $relatedUrl }}" type="video/mp4">
                                                             </video>
-                                                            <span class="video-thumb-overlay"></span>
-                                                            <!-- Icône Play forcée au-dessus -->
-                                                            <i class="fas fa-play-circle play-icon"
-                                                               aria-hidden="true"
-                                                               style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-                  color:#fff;font-size:32px;text-shadow:0 2px 12px rgba(0,0,0,0.6);
-                  z-index:3;pointer-events:none;"></i>
+                                                            <i class="fas fa-play-circle play-icon"></i>
                                                         </div>
-
                                                     @elseif($relatedMedia->isAudio())
                                                         <div class="bg-light d-flex align-items-center justify-content-center"
                                                              style="height: 180px;">
@@ -351,7 +420,7 @@
     <section class="py-5 border-top">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <a href="{{ route('medias.index') }}" class="text-decoration-none text-dark hover-text-primary transition">
+                <a href="{{ route('media.all') }}" class="text-decoration-none text-dark hover-text-primary transition">
                     <i class="fas fa-arrow-left me-2"></i>
                     <span>Retour à la galerie</span>
                 </a>
@@ -456,112 +525,118 @@
         video {
             border-radius: 8px;
         }
+        /* ✅ Ajouter pour l'icône play des vidéos miniatures */
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 32px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+            z-index: 3;
+            pointer-events: none;
+        }
     </style>
 @endpush
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Calculer la taille du fichier
-            async function getFileSize() {
-                try {
-                    const response = await fetch('{{ asset('storage/' . $media->chemin) }}', { method: 'HEAD' });
-                    const size = response.headers.get('content-length');
+        // ✅ Variables Blade correctes
+        const mediaUrl = "{{ $mediaUrl }}";
+        const isCloudinary = {{ $isCloudinary ?  'true' : 'false' }};
+        const mediaTaille = {{ $media->taille ??  'null' }};
 
-                    if (size) {
-                        const sizeInKB = Math.round(size / 1024);
-                        const sizeInMB = sizeInKB > 1024 ? (sizeInKB / 1024).toFixed(2) + ' Mo' : sizeInKB + ' Ko';
-                        document.getElementById('fileSize').textContent = sizeInMB;
-                    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calculer la taille du fichier si pas déjà en DB
+            if (!mediaTaille && document.getElementById('fileSize')) {
+                async function getFileSize() {
+                    try {
+                        const response = await fetch(mediaUrl, { method: 'HEAD' });
+                        const size = response.headers.get('content-length');
+
+                        if (size) {
+                            const sizeInMB = (size / 1048576).toFixed(2);
+                            document.getElementById('fileSize').textContent = sizeInMB + ' Mo';
+                        } else {
+                            document.getElementById('fileSize'). textContent = 'Inconnue';
+                        }
+                    } catch (error) {
                         document.getElementById('fileSize').textContent = 'Inconnue';
                     }
-                } catch (error) {
-                    document.getElementById('fileSize').textContent = 'Inconnue';
                 }
-            }
-
-            getFileSize();
-
-            // Gestion audio
-            const audio = document.getElementById('mediaAudio');
-            if (audio) {
-                audio.addEventListener('loadedmetadata', function() {
-                    const duration = formatTime(audio.duration);
-                    document.getElementById('audioDuration').textContent = duration;
-                });
+                getFileSize();
             }
         });
 
-        // Formatage du temps
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // Fonctions d'image
+        // Fonctions d'image (inchangées)
         let currentZoom = 1;
         let currentRotation = 0;
 
         function zoomImage(factor) {
             const img = document.getElementById('mediaImage');
-            currentZoom = factor;
-            img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
-            img.style.transition = 'transform 0.3s ease';
+            if (img) {
+                currentZoom = factor;
+                img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
+                img.style. transition = 'transform 0.3s ease';
+            }
         }
 
         function rotateImage() {
             const img = document.getElementById('mediaImage');
-            currentRotation += 90;
-            img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
-            img.style.transition = 'transform 0.3s ease';
+            if (img) {
+                currentRotation += 90;
+                img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
+                img.style.transition = 'transform 0.3s ease';
+            }
         }
 
         // Fonctions de partage
-        const mediaUrl = window.location.href;
-        const mediaTitle = '{{ $media->contenu->titre ?? 'Média culturel du Bénin' }}';
-        const mediaDescription = '{{ $media->description ?: 'Découvrez ce média culturel sur Culture Bénin' }}';
+        const pageUrl = window.location.href;
+        const mediaTitle = '{{ addslashes($media->contenu->titre ??  'Média culturel du Bénin') }}';
+        const mediaDescription = '{{ addslashes($media->description ?: 'Découvrez ce média culturel sur Culture Bénin') }}';
 
         function shareMedia() {
             if (navigator.share) {
                 navigator.share({
                     title: mediaTitle,
                     text: mediaDescription,
-                    url: mediaUrl
-                });
+                    url: pageUrl
+                }).catch(err => console. log('Share cancelled'));
             } else {
                 copyLink();
             }
         }
 
         function shareToFacebook() {
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(mediaUrl)}`, '_blank');
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, '_blank');
         }
 
         function shareToTwitter() {
-            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(mediaUrl)}&text=${encodeURIComponent(mediaTitle)}`, '_blank');
+            window.open(`https://twitter.com/intent/tweet? url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(mediaTitle)}`, '_blank');
         }
 
         function shareToWhatsApp() {
-            window.open(`https://wa.me/?text=${encodeURIComponent(mediaTitle + ' - ' + mediaUrl)}`, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(mediaTitle + ' - ' + pageUrl)}`, '_blank');
         }
 
         function shareToLinkedIn() {
-            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(mediaUrl)}`, '_blank');
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`, '_blank');
         }
 
         function copyLink() {
-            navigator.clipboard.writeText(mediaUrl).then(() => {
-                // Toast notification style
+            navigator.clipboard.writeText(pageUrl). then(() => {
                 const toast = document.createElement('div');
                 toast.innerHTML = `
-                    <div style="position: fixed; bottom: 20px; right: 20px; background: #008751; color: white; padding: 12px 20px; border-radius: 6px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="position: fixed; bottom: 20px; right: 20px; background: #008751; color: white; padding: 12px 20px; border-radius: 6px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;">
                         <i class="fas fa-check-circle me-2"></i>
                         Lien copié dans le presse-papier
                     </div>
                 `;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
+            }).catch(err => {
+                alert('Erreur lors de la copie du lien');
             });
         }
     </script>

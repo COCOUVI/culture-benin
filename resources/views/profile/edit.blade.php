@@ -31,7 +31,7 @@
                     <div class="card-body text-center p-4">
                         <div class="avatar-wrapper mb-3 position-relative">
                             @if(auth()->user()->photo)
-                                <img src="{{ asset('storage/' . auth()->user()->photo) }}"
+                                <img src="{{auth()->user()->photo}}"
                                      alt="Photo de profil"
                                      class="avatar-image rounded-circle mx-auto d-block"
                                      style="width: 120px; height: 120px; object-fit: cover; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);">
@@ -120,7 +120,7 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="preview-wrapper">
                                             @if(auth()->user()->photo)
-                                                <img src="{{ asset('storage/' . auth()->user()->photo) }}"
+                                                <img src="{{ auth()->user()->photo}}"
                                                      alt="Photo actuelle"
                                                      id="photo-preview"
                                                      class="rounded-circle"

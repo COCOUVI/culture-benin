@@ -41,7 +41,7 @@
                 <a href="#" class="nav-link dropdown-toggle text-dark d-flex align-items-center"
                     data-bs-toggle="dropdown" style="gap: 8px;">
                     @if (Auth::user()->photo)
-                        <img src="{{ asset('storage/' . Auth::user()->photo) }}"
+                        <img src="{{  Auth::user()->photo }}"
                             class="user-image rounded-circle shadow-sm" alt="{{ Auth::user()->nom }}"
                             style="width: 32px; height: 32px; object-fit: cover;">
                     @else
@@ -58,8 +58,8 @@
                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" style="min-width: 240px;">
                     <li class="user-header bg-gradient-primary text-white text-center py-4 rounded-top">
                         @if (auth()->user()->photo)
-                            <img src="{{ asset('storage/' . auth()->user()->photo) }}"
-                                class="rounded-circle shadow mb-2" alt="Photo de {{ auth()->user()->name }}"
+                            <img src="{{auth()->user()->photo}}"
+                                class="rounded-circle shadow mb-2" alt="Photo de {{ auth()->user()->nom }}"
                                 style="width: 80px; height: 80px; object-fit: cover;">
                         @else
                             @php

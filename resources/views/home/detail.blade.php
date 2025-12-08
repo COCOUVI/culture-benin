@@ -58,7 +58,11 @@
                         <div class="article-author-bar">
                             <div class="author-bar__avatar">
                                 @if(optional($contenu->auteur)->photo)
-                                    <img src="{{ asset('storage/' . $contenu->auteur->photo) }}" alt="{{ $contenu->auteur->nom }}">
+                                    @php
+                                        $authorIsCloudinary = str_contains($contenu->auteur->photo, 'cloudinary');
+                                        $authorPhotoUrl = $authorIsCloudinary ?   $contenu->auteur->photo : asset('storage/' . $contenu->auteur->photo);
+                                    @endphp
+                                    <img src="{{ $authorPhotoUrl }}" alt="{{ $contenu->auteur->nom }}">
                                 @else
                                     <div class="author-bar__avatar-placeholder">
                                         <i class="fas fa-user"></i>
@@ -94,13 +98,25 @@
                     <div class="col-lg-10 col-xl-8">
                         <!-- Featured Image -->
                         @if($contenu->media->first())
+                            @php
+                                $firstMedia = $contenu->media->first();
+                                $mediaIsCloudinary = str_contains($firstMedia->chemin, 'cloudinary');
+                                $mediaUrl = $mediaIsCloudinary ?  $firstMedia->chemin : asset('storage/' . $firstMedia->chemin);
+                            @endphp
                             <figure class="article-featured-image">
                                 <div class="article-featured-image__wrapper">
-                                    <img src="{{ asset('storage/' . $contenu->media->first()->chemin) }}" alt="{{ $contenu->titre }}">
+                                    <img src="{{ $mediaUrl }}"
+                                         alt="{{ $contenu->titre }}"
+                                         loading="eager">
                                 </div>
                                 <figcaption class="article-featured-image__caption">
                                     <i class="fas fa-camera me-2"></i>
                                     {{ $contenu->titre }}
+                                    @if($mediaIsCloudinary)
+                                        <span class="badge bg-success ms-2">
+                    <i class="fas fa-cloud me-1"></i>CDN
+                </span>
+                                    @endif
                                 </figcaption>
                             </figure>
                         @endif
@@ -183,7 +199,11 @@
                             <div class="author-bio__card">
                                 <div class="author-bio__avatar">
                                     @if(optional($contenu->auteur)->photo)
-                                        <img src="{{ asset('storage/' . $contenu->auteur->photo) }}" alt="{{ $contenu->auteur->nom }}">
+                                        @php
+                                            $authorBioIsCloudinary = str_contains($contenu->auteur->photo, 'cloudinary');
+                                            $authorBioPhotoUrl = $authorBioIsCloudinary ? $contenu->auteur->photo : asset('storage/' .  $contenu->auteur->photo);
+                                        @endphp
+                                        <img src="{{ $authorBioPhotoUrl }}" alt="{{ $contenu->auteur->nom }}">
                                     @else
                                         <div class="author-bio__avatar-placeholder">
                                             <i class="fas fa-user"></i>
@@ -240,14 +260,18 @@
 
                             {{-- Formulaire d'ajout de commentaire (utilisateur connecté) --}}
                             @auth
-                                @if(! $userComment)
+                                @if(!$userComment)
                                     {{-- L'utilisateur n'a pas encore commenté --}}
                                     <div class="comment-form-wrapper">
                                         <form action="{{ route('comment.store', $contenu) }}" method="POST" class="comment-form" id="commentForm">
                                             @csrf
                                             <div class="comment-form__avatar">
                                                 @if(auth()->user()->photo)
-                                                    <img src="{{ asset('storage/' . auth()->user()->photo) }}" alt="{{ auth()->user()->nom }}">
+                                                    @php
+                                                        $userPhotoIsCloudinary = str_contains(auth()->user()->photo, 'cloudinary');
+                                                        $userPhotoUrl = $userPhotoIsCloudinary ? auth()->user()->photo : asset('storage/' . auth()->user()->photo);
+                                                    @endphp
+                                                    <img src="{{ $userPhotoUrl }}" alt="{{ auth()->user()->nom }}">
                                                 @else
                                                     <div class="comment-form__avatar-placeholder">
                                                         <i class="fas fa-user"></i>
@@ -337,7 +361,11 @@
                                     <div class="comment-item {{ $commentaire->id_user === auth()->id() ? 'comment-item--own' : '' }}">
                                         <div class="comment-item__avatar">
                                             @if($commentaire->user->photo)
-                                                <img src="{{ asset('storage/' . $commentaire->user->photo) }}" alt="{{ $commentaire->user->nom }}">
+                                                @php
+                                                    $commentUserIsCloudinary = str_contains($commentaire->user->photo, 'cloudinary');
+                                                    $commentUserPhotoUrl = $commentUserIsCloudinary ? $commentaire->user->photo : asset('storage/' . $commentaire->user->photo);
+                                                @endphp
+                                                <img src="{{ $commentUserPhotoUrl }}" alt="{{ $commentaire->user->nom }}">
                                             @else
                                                 <img src="https://ui-avatars.com/api/?name={{ urlencode($commentaire->user->prenom .  ' ' . $commentaire->user->nom) }}&background=008751&color=fff&size=128"
                                                      alt="{{ $commentaire->user->nom }}">

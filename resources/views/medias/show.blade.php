@@ -4,6 +4,12 @@
     Détail d'un Média
 @endsection
 
+@extends('layout')
+
+@section('title')
+    Détail d'un Média
+@endsection
+
 @section('content')
     <div class="card custom-card mb-4">
         <!-- Header -->
@@ -25,37 +31,87 @@
                         </h6>
 
                         @php
-                            $extension = strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
-                            $isImage = in_array($extension, ['jpg','jpeg','png','gif','webp']);
-                            $isVideo = in_array($extension, ['mp4','mov','avi','mkv','webm']);
-                            $isAudio = in_array($extension, ['mp3','wav','ogg','m4a','aac','flac']);
+                            // ✅ Détecter le type depuis l'URL Cloudinary ou l'extension
+                            $isCloudinary = str_contains($media->chemin, 'cloudinary');
+
+                            if ($isCloudinary) {
+                                // Extraire le type depuis l'URL Cloudinary
+                                preg_match('/\/(image|video|raw)\/upload\//', $media->chemin, $matches);
+                                $cloudinaryType = $matches[1] ?? 'raw';
+
+                                $isImage = $cloudinaryType === 'image';
+                                $isVideo = $cloudinaryType === 'video';
+
+                                // Pour audio, c'est stocké comme 'video' sur Cloudinary
+                                // On vérifie l'extension
+                                $extension = strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
+                                $isAudio = in_array($extension, ['mp3','wav','ogg','m4a','aac','flac']);
+
+                                // Si c'est video mais pas audio, c'est une vraie vidéo
+                                if ($cloudinaryType === 'video' && !$isAudio) {
+                                    $isVideo = true;
+                                }
+                            } else {
+                                // Fallback : détection par extension
+                                $extension = strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
+                                $isImage = in_array($extension, ['jpg','jpeg','png','gif','webp','svg']);
+                                $isVideo = in_array($extension, ['mp4','mov','avi','mkv','webm']);
+                                $isAudio = in_array($extension, ['mp3','wav','ogg','m4a','aac','flac']);
+                            }
+
+                            // Extension pour affichage
+                            $extension = $media->format ?? strtolower(pathinfo($media->chemin, PATHINFO_EXTENSION));
                         @endphp
 
                         <div class="media-wrapper">
                             @if($isImage)
-                                <img src="{{ asset('storage/'.$media->chemin) }}"
-                                     alt="Media"
-                                     class="img-fluid rounded-3 shadow-lg media-image">
+                                {{-- ✅ Image : URL directe (Cloudinary ou local) --}}
+                                <img src="{{ $isCloudinary ? $media->chemin : asset('storage/'.$media->chemin) }}"
+                                     alt="{{ $media->titre ??  'Media' }}"
+                                     class="img-fluid rounded-3 shadow-lg media-image"
+                                     loading="lazy">
+
                             @elseif($isVideo)
-                                <video controls class="w-100 rounded-3 shadow-lg" controlsList="nodownload">
-                                    <source src="{{ asset('storage/'.$media->chemin) }}" type="video/{{ $extension }}">
+                                {{-- ✅ Vidéo : URL directe --}}
+                                <video controls
+                                       class="w-100 rounded-3 shadow-lg"
+                                       controlsList="nodownload"
+                                       preload="metadata">
+                                    <source src="{{ $isCloudinary ? $media->chemin : asset('storage/'.$media->chemin) }}"
+                                            type="video/{{ $extension }}">
                                     Votre navigateur ne supporte pas la lecture vidéo.
                                 </video>
+
                             @elseif($isAudio)
+                                {{-- ✅ Audio : Player avec visualisation --}}
                                 <div class="audio-player-wrapper">
                                     <div class="audio-visual-icon">
                                         <i class="bi bi-music-note-beamed audio-icon"></i>
                                     </div>
-                                    <p class="audio-filename mt-3 mb-3">{{ basename($media->chemin) }}</p>
-                                    <audio controls class="w-100 custom-audio-player" controlsList="nodownload">
-                                        <source src="{{ asset('storage/'.$media->chemin) }}" type="audio/{{ $extension }}">
+                                    <p class="audio-filename mt-3 mb-3">
+                                        {{ $media->titre ?? basename($media->chemin) }}
+                                    </p>
+                                    <audio controls
+                                           class="w-100 custom-audio-player"
+                                           controlsList="nodownload"
+                                           preload="metadata">
+                                        <source src="{{ $isCloudinary ? $media->chemin : asset('storage/'.$media->chemin) }}"
+                                                type="audio/{{ $extension }}">
                                         Votre navigateur ne supporte pas la lecture audio.
                                     </audio>
                                 </div>
+
                             @else
+                                {{-- ✅ Autre fichier : Placeholder avec lien de téléchargement --}}
                                 <div class="file-placeholder">
                                     <i class="bi bi-file-earmark-text file-icon"></i>
-                                    <p class="mt-3 mb-0 text-muted">{{ basename($media->chemin) }}</p>
+                                    <p class="mt-3 mb-2 text-muted">{{ basename($media->chemin) }}</p>
+                                    <a href="{{ $isCloudinary ? $media->chemin : asset('storage/'.$media->chemin) }}"
+                                       class="btn btn-sm btn-primary mt-2"
+                                       download
+                                       target="_blank">
+                                        <i class="bi bi-download me-1"></i> Télécharger
+                                    </a>
                                 </div>
                             @endif
                         </div>
@@ -74,17 +130,49 @@
                                     <span>🎵 {{ strtoupper($extension) }}</span>
                                 @else
                                     <i class="bi bi-file-earmark text-secondary"></i>
-                                    <span>{{ strtoupper($extension) }}</span>
+                                    <span>📄 {{ strtoupper($extension) }}</span>
                                 @endif
                             </div>
+
                             <div class="metadata-item">
                                 <i class="bi bi-calendar3 text-primary"></i>
                                 <span>{{ $media->created_at->format('d/m/Y') }}</span>
                             </div>
-                            @if(file_exists(storage_path('app/public/'.$media->chemin)))
+
+                            {{-- ✅ Taille depuis la colonne 'taille' ou calcul local --}}
+                            @if($media->taille)
+                                <div class="metadata-item">
+                                    <i class="bi bi-hdd text-success"></i>
+                                    <span>{{ number_format($media->taille / 1048576, 2) }} MB</span>
+                                </div>
+                            @elseif(! $isCloudinary && file_exists(storage_path('app/public/'.$media->chemin)))
                                 <div class="metadata-item">
                                     <i class="bi bi-hdd text-success"></i>
                                     <span>{{ number_format(filesize(storage_path('app/public/'.$media->chemin)) / 1048576, 2) }} MB</span>
+                                </div>
+                            @endif
+
+                            {{-- ✅ Durée pour vidéo/audio --}}
+                            @if($media->duree)
+                                <div class="metadata-item">
+                                    <i class="bi bi-clock text-info"></i>
+                                    <span>{{ gmdate('i:s', $media->duree) }}</span>
+                                </div>
+                            @endif
+
+                            {{-- ✅ Dimensions pour images/vidéos --}}
+                            @if($media->largeur && $media->hauteur)
+                                <div class="metadata-item">
+                                    <i class="bi bi-aspect-ratio text-secondary"></i>
+                                    <span>{{ $media->largeur }}x{{ $media->hauteur }}</span>
+                                </div>
+                            @endif
+
+                            {{-- ✅ Badge Cloudinary --}}
+                            @if($isCloudinary)
+                                <div class="metadata-item metadata-cloudinary">
+                                    <i class="bi bi-cloud-check-fill text-success"></i>
+                                    <span>☁️ Cloudinary</span>
                                 </div>
                             @endif
                         </div>
@@ -106,7 +194,7 @@
                                     </div>
                                     <div class="info-content">
                                         <span class="info-label-small">Contenu lié</span>
-                                        <span class="info-value-large">{{ $media->contenu->titre ??  'N/A' }}</span>
+                                        <span class="info-value-large">{{ $media->contenu->titre ?? 'N/A' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -118,7 +206,7 @@
                                     </div>
                                     <div class="info-content">
                                         <span class="info-label-small">Type de média</span>
-                                        <span class="badge-type mt-1">{{ $media->type_media->nom ?? 'N/A' }}</span>
+                                        <span class="badge-type mt-1">{{ $media->type_media->nom ??  ucfirst($extension) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -129,9 +217,15 @@
                                         <i class="bi bi-folder-fill"></i>
                                     </div>
                                     <div class="info-content">
-                                        <span class="info-label-small">Chemin</span>
+                                        <span class="info-label-small">Source</span>
                                         <span class="info-value-large text-truncate" title="{{ $media->chemin }}">
-                                            {{ Str::limit(basename($media->chemin), 30) }}
+                                            @if($isCloudinary)
+                                                <i class="bi bi-cloud-check me-1 text-success"></i>
+                                                Cloudinary CDN
+                                            @else
+                                                <i class="bi bi-hdd me-1 text-primary"></i>
+                                                {{ Str::limit(basename($media->chemin), 25) }}
+                                            @endif
                                         </span>
                                     </div>
                                 </div>
@@ -143,7 +237,7 @@
                                         <i class="bi bi-chat-left-text-fill"></i>
                                     </div>
                                     <div class="info-content">
-                                        <span class="info-label-small">Description</span>
+                                        <span class="info-label-small">Description:</span>
                                         <span class="info-value-large">{{ $media->description ?? 'Aucune description' }}</span>
                                     </div>
                                 </div>
@@ -541,7 +635,7 @@
             }
 
             .audio-icon {
-                font-size: 3. 5rem;
+                font-size: 3.5rem;
             }
 
             .audio-player-wrapper {
@@ -557,9 +651,9 @@
         $('. deleteMediaForm').on('submit', function(e) {
             e.preventDefault();
             let form = this;
-            Swal.fire({
+            Swal. fire({
                 title: 'Êtes-vous sûr ? ',
-                text: "Le média sera définitivement supprimé.",
+                text: "Le média sera définitivement supprimé de Cloudinary et de la base de données.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',

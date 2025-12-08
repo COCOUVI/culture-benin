@@ -125,21 +125,39 @@
             @else
                 <div class="row g-4 content-grid">
                     @foreach($contents as $contenu)
+                        @php
+                            // ✅ Détection Cloudinary
+                            $mediaPath = optional($contenu->media->first())->chemin;
+
+                            if ($mediaPath) {
+                                $isCloudinary = str_contains($mediaPath, 'cloudinary');
+                                $imgSrc = $isCloudinary ?  $mediaPath : asset("storage/{$mediaPath}");
+                            } else {
+                                // Placeholder Unsplash
+                                $imgSrc = "https://images.unsplash.com/photo-1569165003085-e8a1066f1cb8?w=600&h=400&fit=crop";
+                            }
+                        @endphp
+
                         <div class="col-lg-4 col-md-6">
                             <article class="content-card">
                                 <!-- Card Image -->
                                 <div class="content-card__image">
-                                    @php
-                                        $media = optional($contenu->media->first())->chemin;
-                                        $imgSrc = $media ? asset("storage/{$media}") : "https://images.unsplash.com/photo-1569165003085-e8a1066f1cb8?w=600&h=400&fit=crop";
-                                    @endphp
-                                    <img src="{{ $imgSrc }}" alt="{{ $contenu->titre ??  'Contenu culturel' }}">
+                                    <img src="{{ $imgSrc }}"
+                                         alt="{{ $contenu->titre ??  'Contenu culturel' }}"
+                                         loading="lazy">
 
                                     <!-- Category Badge -->
                                     <div class="content-card__category">
                                         <i class="fas fa-tag me-1"></i>
-                                        {{ optional($contenu->type_contenu)->nom ??  'Contenu' }}
+                                        {{ optional($contenu->type_contenu)->nom ?? 'Contenu' }}
                                     </div>
+
+                                    {{-- ✅ Badge Cloudinary si hébergé sur CDN --}}
+                                    @if($mediaPath && $isCloudinary)
+                                        <div class="cloudinary-badge">
+                                            <i class="fas fa-cloud"></i>
+                                        </div>
+                                    @endif
 
                                     <!-- Favorite Button -->
                                     <button class="content-card__favorite" aria-label="Ajouter aux favoris">
@@ -151,14 +169,14 @@
                                 <div class="content-card__body">
                                     <!-- Meta Info -->
                                     <div class="content-card__meta">
-                                        <span class="badge-langue">
-                                            <i class="fas fa-language me-1"></i>
-                                            {{ optional($contenu->langue)->nom_langue ?? '—' }}
-                                        </span>
+                            <span class="badge-langue">
+                                <i class="fas fa-language me-1"></i>
+                                {{ optional($contenu->langue)->nom_langue ?? '—' }}
+                            </span>
                                         <span class="content-card__date">
-                                            <i class="far fa-clock me-1"></i>
-                                            {{ optional($contenu->created_at)->diffForHumans() ??  '' }}
-                                        </span>
+                                <i class="far fa-clock me-1"></i>
+                                {{ optional($contenu->created_at)->diffForHumans() ??  '' }}
+                            </span>
                                     </div>
 
                                     <!-- Title -->
@@ -205,7 +223,7 @@
                     @endforeach
                 </div>
 
-                <!-- Pagination -->
+                <!-- Pagination inchangée -->
                 <div class="pagination-wrapper">
                     {{ $contents->appends(request()->query())->links('pagination::bootstrap-5') }}
                 </div>

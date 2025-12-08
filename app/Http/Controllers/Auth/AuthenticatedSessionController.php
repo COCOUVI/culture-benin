@@ -24,25 +24,13 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // ✅ authenticate() fait tout le travail (vérifie + connecte)
         $request->authenticate();
+
+        // ✅ Régénère la session
         $request->session()->regenerate();
 
-        $user = Auth::user();
-
-        // Si l'utilisateur (n'importe qui) a activé 2FA
-        if ($user->google2fa_enabled) {
-            // Déconnecter temporairement
-            Auth::logout();
-
-            // Stocker l'ID en session pour le challenge 2FA
-            $request->session()->put('2fa:user:id', $user->id);
-
-            // Rediriger vers le challenge 2FA
-            return redirect()->route('2fa.challenge')
-                ->with('info', '🔐 Entrez votre code de vérification');
-        }
-
-        // Redirection normale selon le rôle
+        // ✅ Redirige selon le rôle
         return $this->redirectAuthenticatedUser();
     }
 
