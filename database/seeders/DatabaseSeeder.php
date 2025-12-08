@@ -23,10 +23,10 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call([
-            //          RoleSeeder::class,
-//             RegionSeeder::class,
-//            LangueSeeder::class,
-            UserSeeder::class
+            RoleSeeder::class,
+           RegionSeeder::class,
+           LangueSeeder::class,
+//            UserSeeder::class
         ]);
     }
 }
