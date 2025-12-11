@@ -600,28 +600,28 @@
             height: 75vh;
             min-height: 500px;
             overflow: hidden;
-            background: #000; /* Fallback pendant le chargement */
+            background: #000;
+            margin: 0;
+            padding: 0;
         }
-
-        #heroCarousel {
-            height: 100%;
-        }
-
+        #heroCarousel,
         .carousel-inner,
-        .carousel-item {
-            height: 100%;
-        }
-
+        .carousel-item,
         .hero-slide {
             height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .hero-slide {
             background-size: cover;
-            background-position: center;
+            background-position: center center;
             background-repeat: no-repeat;
             display: flex;
             align-items: center;
             position: relative;
-            /* IMPORTANT: Assure que l'image est chargée avant l'affichage */
-            background-color: #1a1a1a;
+
+            min-height: 100%;
+            width: 100%;
         }
 
         /* Pseudo-élément pour l'overlay - évite l'interférence */

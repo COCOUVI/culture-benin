@@ -538,7 +538,7 @@
             pointer-events: none;
         }
     </style>
-@endpush
+@endpush♠
 
 @push('scripts')
     <script>
