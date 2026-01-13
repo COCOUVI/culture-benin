@@ -14,11 +14,9 @@ WORKDIR /var/www
 # Copier le projet
 COPY . .
 
-# Créer un fichier .env vide (Laravel en a besoin)
-RUN touch .env
-
-# Installer dépendances
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Suppression du touch .env pour laisser Render injecter les variables
+# Installer les dépendances sans scripts (qui pourraient échouer sans DB)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache \
@@ -26,8 +24,9 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 
 EXPOSE 10000
 
-# Démarrage sans cache:clear
-CMD php artisan config:clear && \
-    php artisan key:generate --force && \
+# Utilisation d'un script de démarrage plus souple
+CMD php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=10000
