@@ -1,36 +1,27 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
-# Dépendances système
 RUN apt-get update && apt-get install -y \
-    git curl unzip zip \
-    libonig-dev libzip-dev \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip gd
+    git curl unzip libzip-dev libpng-dev \
+    ca-certificates \
+    && docker-php-ext-install pdo pdo_mysql zip gd \
+    && apt-get clean
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
-
-# Copier le projet
 COPY . .
 
-# Installer dépendances Laravel
+# Ne pas créer .env ici, utiliser les variables d'environnement Render
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissions
+# Ne PAS faire de cache config en build time
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Optimisation prod
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
 EXPOSE 10000
 
-CMD ["php", "-S", "0.0.0.0:10000", "-t", "public"]
+# Script de démarrage qui génère la clé et teste la BDD
+CMD php artisan key:generate --force && \
+    php artisan config:clear && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=10000
