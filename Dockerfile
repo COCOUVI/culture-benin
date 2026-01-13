@@ -26,9 +26,8 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 
 EXPOSE 10000
 
-# Démarrage : les variables d'environnement Render seront utilisées automatiquement
+# Démarrage sans cache:clear
 CMD php artisan config:clear && \
-    php artisan cache:clear && \
     php artisan key:generate --force && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=10000
